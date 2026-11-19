@@ -73,6 +73,23 @@ input:checked+.slider:before{transform:translateX(36px);background:#fff}
 footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span{color:var(--primary);font-weight:500}
 @media(max-width:768px){.container{padding:1rem}.logo{font-size:1.2rem}.time{font-size:1.1rem}.date{display:none}.notification{left:1rem;right:1rem;max-width:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.rows{display:flex;flex-direction:column;gap:12px}
+.row{display:grid;gap:12px;align-items:center}.row.r1{justify-items:center}.row.r2>:first-child{justify-self:start}.row.r2>:last-child{justify-self:end}
+.row .k{width:100%;font-size:.9rem;padding:0}
+.k.red{background:#d4443d;color:#fff}.k.blue{background:#2a62d9;color:#fff}.k.gray{background:#8d9396;color:#15171a}
+.row .k.sm{width:46px;height:46px;border-radius:50%}.row .k.w{width:96px}
+.capw{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}.capw small{font-size:.6rem;letter-spacing:.5px;color:#a9afb2}
+.pad{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);width:210px;height:210px;margin:6px auto;border-radius:50%;background:#1a1c1f;padding:8px}
+.pad .k{height:100%;width:100%;border-radius:50%;background:transparent;font-size:.8rem;padding:0}
+.pad .u{grid-area:1/2}.pad .l{grid-area:2/1}.pad .c{grid-area:2/2;background:#3b3f43}.pad .rt{grid-area:2/3}.pad .dn{grid-area:3/2}
+.rm-sound .pad .c{background:linear-gradient(145deg,#a3a9ad,#4c5156)}
+.pillg{display:flex;flex-direction:column;border-radius:26px;background:#34383c;overflow:hidden}.pillg .k{background:transparent;border-radius:0;height:50px}
+.stack{display:flex;flex-direction:column;gap:10px;align-items:center}.row .stack .k{width:46px;height:46px;border-radius:50%;font-size:.65rem}
+.rm-proj{max-width:250px;border-radius:125px 125px 70px 70px}.rm-sound,.rm-night,.rm-ac{max-width:310px}
+.acp{max-width:340px;margin:0 auto 18px;display:grid;gap:12px;text-align:center}.acp[hidden]{display:none}.acp.off .actemp,.acp.off .acrow{opacity:.4;pointer-events:none}
+.actemp{display:flex;align-items:center;justify-content:center;gap:18px}.actemp .k{width:54px;height:54px;border-radius:50%;font-size:1.4rem}
+#ac-temp{font-family:'Orbitron',sans-serif;font-size:2.6rem;color:var(--primary);min-width:130px}
+.acrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.acrow .pill{padding:.45rem .8rem}
 </style>
 </head>
 <body>
@@ -90,6 +107,7 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
   <div class="device-info">
     <div class="info-chip" id="device-chip"><span class="label">STATUS ALAT (ESP32)</span><span class="value" id="device-state">MENUNGGU...</span></div>
     <div class="info-chip"><span class="label">AKTIVITAS TERAKHIR</span><span class="value" id="activity">-</span></div>
+    <div class="info-chip"><span class="label">SUHU &amp; KELEMBAPAN</span><span class="value" id="sensor">--°C · --%</span></div>
   </div>
 
   <div class="panel">
@@ -103,7 +121,14 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
   <div class="panel">
     <div class="panel-title"><i class="fas fa-tower-broadcast"></i> REMOTE IR</div>
     <div class="tabs" id="tabs" role="tablist"></div>
-    <div class="remote"><div class="ir" id="ir"></div><div class="rname"><span id="rn"></span><small id="rs"></small></div><div class="grid" id="grid"></div></div>
+    <div class="acp off" id="acpanel" hidden>
+      <div><small>Protokol AC: <b id="ac-proto">belum terdeteksi</b></small> <button class="pill" id="ac-detect">DETEKSI REMOTE AC</button></div>
+      <div class="actemp"><button class="k" id="ac-dn" aria-label="Suhu turun">−</button><div id="ac-temp">--°</div><button class="k" id="ac-up" aria-label="Suhu naik">+</button></div>
+      <div class="acrow" id="ac-mode"></div><div class="acrow" id="ac-fan"></div>
+      <div class="acrow"><button class="pill" id="ac-pwr">POWER</button><button class="pill" id="ac-swing">SWING</button></div>
+      <small>Tombol cadangan di bawah: pelajari satu per satu bila merek AC tidak terdeteksi.</small>
+    </div>
+    <div class="remote" id="remote"><div class="ir" id="ir"></div><div class="rname"><span id="rn"></span><small id="rs"></small></div><div class="rows" id="grid"></div></div>
     <div class="learnbar"><span id="hint">Tombol bergaris putus belum dipelajari.</span><button class="pill" id="learn" aria-pressed="false">MODE BELAJAR</button></div>
   </div>
 
@@ -120,12 +145,32 @@ const P='esp32ir/';   // harus sama dengan PREFIX di firmware
 
 // Layout remote: [kunci, label, kelas]; null = kosong
 const R={
- proj:{tab:'Proyektor',name:'XGODY Gimbal 3 Pro',rows:[[['power','⏻','pwr'],['source','Source'],['mute','Mute']],[['menu','Menu'],['up','▲'],['home','Home']],[['left','◀'],['ok','OK','ok'],['right','▶']],[['back','Back'],['down','▼'],null],[['vol_down','Vol −'],null,['vol_up','Vol +']]]},
- sound:{tab:'Speaker',name:'Polytron PMA',rows:[[['power','⏻','pwr'],['mode','Mode'],['mute','Mute']],[['prev','⏮'],['play','⏯','ok'],['next','⏭']],[['vol_down','Vol −'],null,['vol_up','Vol +']]]},
- night:{tab:'Lampu tidur',name:'Remote lampu tidur',rows:[[['on','On'],['off','Off','pwr'],['timer','Timer']],[['bri_up','Terang +'],null,['color','Warna']],[['bri_down','Terang −'],null,['mode','Mode']]]}
+ proj:{tab:'Proyektor',name:'XGODY Gimbal A2',rows:[
+  [['power','⏻','red sm'],['settings','⚙','sm']],
+  {pad:[['up','▲'],['left','◀'],['ok','OK'],['right','▶'],['down','▼']]},
+  [['back','↩'],['home','⌂'],['menu','≡']],
+  [{pill:[['vol_up','Vol +'],['vol_down','Vol −']]},{stack:[['mouse','Mouse'],['mute','Mute']]},{pill:[['f_up','F +'],['f_down','F −']]}]]},
+ sound:{tab:'Speaker',name:'Polytron 84J955',rows:[
+  [['bt','BT','blue'],['source','SOURCE','gray'],['power','⏻','red']],
+  [['n1','1','gray'],['n2','2','gray'],['n3','3','gray']],[['n4','4','gray'],['n5','5','gray'],['n6','6','gray']],[['n7','7','gray'],['n8','8','gray'],['n9','9','gray']],
+  [['repeat','','gray','REPEAT'],['n0','0','gray'],['bazooka','','gray','BAZZOKE']],
+  [['scan','','gray','SCAN'],null,['memory','','gray','MEMORY']],
+  {pad:[['vol_up','VOL +'],['prev','⏮'],['play','⏯'],['next','⏭'],['vol_down','VOL −']]},
+  [['light','LIGHT','gray'],null,['mute','Mute','gray']],
+  [['x1',''],['x2',''],['x3','']],[['x4',''],['x5',''],['x6','']]]},
+ night:{tab:'Lampu tidur',name:'Remote LED/Laser/Music',rows:[
+  [['led','⏻','red w','LED']],[['laser','⏻','red w','LASER']],
+  [['r','R','sm'],null,['g','G','sm']],
+  {pad:[['vol_up','VOL +'],['prev','⏮'],['mic','MIC'],['next','⏭'],['vol_down','VOL −']]},
+  [['b','B','sm'],null,['w','W','sm']],
+  [['s_up','S+'],['fade1','FADE 1'],['bright','☀']],[['s_down','S−'],['fade2','FADE 2'],['laser_lt','LASER light']],
+  [['timer','⏲'],['h1','1H'],['h2','2H']],
+  [['music','⏻','red w','MUSIC']]]},
+ ac:{tab:'AC',name:'Tombol cadangan (replay)',rows:[
+  [['on','ON','red'],['off','OFF']],[['t20','20°'],['t22','22°'],['t24','24°']],[['t26','26°'],['t28','28°'],['t30','30°']]]}
 };
 const $=s=>document.querySelector(s);
-const learned={proj:new Set(),sound:new Set(),night:new Set()};
+const learned={proj:new Set(),sound:new Set(),night:new Set(),ac:new Set()};
 let cur='proj',learn=false,isConnected=false,deviceOnline=null,pending={};
 const TIMEOUT=5000;
 
@@ -150,13 +195,15 @@ client.onMessageArrived=msg=>{
  if(t==='lamp/state'||t==='fan/state'){const id=t.split('/')[0];syncDeviceState(id,m);clearPending(id)}
  else if(t==='status')setDeviceOnline(m==='online');
  else if(t.endsWith('/learned')&&learned[t.split('/')[0]]){try{learned[t.split('/')[0]]=new Set(JSON.parse(m));renderRemote()}catch(e){}}
+ else if(t==='sensor'){try{const o=JSON.parse(m);$('#sensor').textContent=o.temp.toFixed(1)+'°C · '+Math.round(o.hum)+'%'}catch(e){}}
+ else if(t==='ac/state'){try{acs=JSON.parse(m);renderAc()}catch(e){}}
  else if(t==='learnstate')onLearnState(m);
 };
 function connectMQTT(){
  updateConnectionStatus('connecting');
  client.connect({useSSL:true,userName:mqttConfig.username,password:mqttConfig.password,
   onSuccess:()=>{isConnected=true;updateConnectionStatus('connected');refreshControls();showNotification('Berhasil terhubung ke MQTT broker!');
-   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','learnstate'].forEach(x=>client.subscribe(P+x))},
+   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','learnstate'].forEach(x=>client.subscribe(P+x))},
   onFailure:e=>{isConnected=false;updateConnectionStatus('disconnected');refreshControls();showNotification('Gagal terhubung! Retry dalam 5 detik...');setTimeout(connectMQTT,5000)}});
 }
 function publishMessage(topic,payload){if(!client.isConnected())return false;const m=new Paho.MQTT.Message(payload);m.destinationName=P+topic;client.send(m);return true}
@@ -181,10 +228,31 @@ function setupDeviceControls(){document.querySelectorAll('.device-card').forEach
 // ----- remote IR -----
 const HINT='Tombol bergaris putus belum dipelajari.';
 function renderTabs(){const t=$('#tabs');t.innerHTML='';for(const id in R){const b=document.createElement('button');b.className='tab';b.textContent=R[id].tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',id===cur);b.onclick=()=>{cur=id;renderTabs();renderRemote()};t.append(b)}}
-function renderRemote(){const r=R[cur];$('#rn').textContent=r.tab;$('#rs').textContent=r.name;const g=$('#grid');g.innerHTML='';g.classList.toggle('learning',learn);
- r.rows.flat().forEach(k=>{if(!k){g.append(document.createElement('span'));return}
-  const b=document.createElement('button');b.className='k '+(k[2]||'');b.textContent=k[1];b.setAttribute('aria-label',k[0]);
-  if(!learned[cur].has(k[0]))b.classList.add('new');b.onclick=()=>press(k[0],b);g.append(b)})}
+function mk(k){const b=document.createElement('button');b.className='k '+(k[2]||'');b.textContent=k[1];b.setAttribute('aria-label',k[0]);
+ if(!learned[cur].has(k[0]))b.classList.add('new');b.onclick=()=>press(k[0],b);
+ if(!k[3])return b;const w=document.createElement('div');w.className='capw';const c=document.createElement('small');c.textContent=k[3];w.append(c,b);return w}
+function cell(c){if(!c)return document.createElement('span');
+ if(c.pill||c.stack){const d=document.createElement('div');d.className=c.pill?'pillg':'stack';(c.pill||c.stack).forEach(k=>d.append(mk(k)));return d}
+ return mk(c)}
+function renderRemote(){const r=R[cur];$('#rn').textContent=r.tab;$('#rs').textContent=r.name;
+ const g=$('#grid');g.innerHTML='';g.classList.toggle('learning',learn);$('#remote').className='remote rm-'+cur;
+ r.rows.forEach(row=>{const d=document.createElement('div');
+  if(row.pad){d.className='pad';['u','l','c','rt','dn'].forEach((p,i)=>{const b=mk(row.pad[i]);b.classList.add(p);d.append(b)})}
+  else{d.className='row r'+row.length;d.style.gridTemplateColumns='repeat('+row.length+',1fr)';row.forEach(c=>d.append(cell(c)))}
+  g.append(d)});
+ $('#acpanel').hidden=cur!=='ac'}
+const AM=[['auto','Auto'],['cool','Dingin'],['dry','Kering'],['fan','Kipas'],['heat','Panas']],AF=[['auto','Auto'],['low','Pelan'],['medium','Sedang'],['high','Kencang']];
+let acs={proto:'-',power:0,mode:'cool',temp:25,fan:'auto',swing:0};
+function acCmd(m){if(!isConnected){showNotification('Belum terhubung ke broker');return}publishMessage('ac/cmd',m)}
+function acGroup(id,list,pre){const d=$(id);list.forEach(([v,l])=>{const b=document.createElement('button');b.className='pill';b.textContent=l;b.dataset.v=v;b.onclick=()=>acCmd(pre+':'+v);d.append(b)})}
+function renderAc(){$('#ac-proto').textContent=acs.proto==='-'?'belum terdeteksi':acs.proto;$('#acpanel').classList.toggle('off',acs.proto==='-');$('#ac-temp').textContent=acs.temp+'°';
+ document.querySelectorAll('#ac-mode .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===acs.mode));
+ document.querySelectorAll('#ac-fan .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===acs.fan));
+ $('#ac-pwr').setAttribute('aria-pressed',!!acs.power);$('#ac-swing').setAttribute('aria-pressed',!!acs.swing)}
+function setupAc(){acGroup('#ac-mode',AM,'mode');acGroup('#ac-fan',AF,'fan');
+ $('#ac-up').onclick=()=>acCmd('temp:'+(acs.temp+1));$('#ac-dn').onclick=()=>acCmd('temp:'+(acs.temp-1));
+ $('#ac-pwr').onclick=()=>acCmd('power:'+(acs.power?'off':'on'));$('#ac-swing').onclick=()=>acCmd('swing:'+(acs.swing?'off':'on'));
+ $('#ac-detect').onclick=()=>{if(isConnected)publishMessage('learn','ac:detect');else showNotification('Belum terhubung ke broker')};renderAc()}
 function press(key,btn){try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
  if(!isConnected){showNotification('Belum terhubung ke broker');return}
  if(learn){publishMessage('learn',cur+':'+key);btn.classList.add('hit');return}
@@ -197,9 +265,10 @@ function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev
  else if(st==='sent')$('#activity').textContent=`${name}: ${key} terkirim`;
  else if(st==='timeout')showNotification('Waktu habis, coba lagi');
  else if(st==='unsupported')showNotification('Sinyal tidak didukung, tekan lagi dengan jelas');
- else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32')}
+ else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32');
+ else if(st==='acnone')showNotification('Merek AC belum terdeteksi. Tekan DETEKSI REMOTE AC dulu.')}
 
-function init(){updateDateTime();setInterval(updateDateTime,1000);renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
+function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
 window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
