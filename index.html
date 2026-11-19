@@ -30,7 +30,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:1rem;ma
 .info-chip.offline{border-color:var(--secondary)}.info-chip.offline .value{color:var(--secondary)}
 .panel{background:linear-gradient(145deg,var(--p1),var(--p2));border-radius:15px;padding:2rem;box-shadow:var(--shadow);border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);margin-bottom:2rem}
 .panel-title{font-family:'Orbitron',sans-serif;font-size:1.4rem;margin-bottom:1.8rem;color:var(--primary);display:flex;align-items:center;justify-content:center;text-transform:uppercase;gap:.7rem}
-.devices-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;max-width:700px;margin:0 auto}
+.devices-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;max-width:960px;margin:0 auto}
 .device-card{background:var(--card);border-radius:15px;padding:2rem;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:.3s;border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);position:relative;overflow:hidden}
 .device-card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--primary) 40%,transparent)}
 .device-card.active{background:color-mix(in srgb,var(--primary) 12%,var(--card));border-color:var(--primary)}
@@ -90,6 +90,17 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
 .actemp{display:flex;align-items:center;justify-content:center;gap:18px}.actemp .k{width:54px;height:54px;border-radius:50%;font-size:1.4rem}
 #ac-temp{font-family:'Orbitron',sans-serif;font-size:2.6rem;color:var(--primary);min-width:130px}
 .acrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.acrow .pill{padding:.45rem .8rem}
+.sensor-card{cursor:default}.sensor-card:hover{transform:none}.sensor-card .device-icon{color:var(--primary)}
+.sv{font-family:'Orbitron',sans-serif;font-size:2.6rem;line-height:1.1}.sv small{font-size:1rem;opacity:.7;margin-left:.2rem}
+.sv.hum{font-size:1.9rem;color:var(--primary);margin-top:.5rem}.sv i{font-size:1.2rem;margin-right:.4rem}
+.ro{display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.7rem 1rem;border-radius:10px;margin-bottom:1.5rem;border:1px dashed var(--secondary);color:var(--secondary);font-size:.9rem;text-align:center}.ro[hidden]{display:none}
+.who{font-size:.8rem;opacity:.8;text-align:right}.hr{flex-wrap:wrap;justify-content:flex-end}
+.pill:disabled{opacity:.4;cursor:not-allowed}
+dialog{border:1px solid var(--primary);border-radius:16px;background:var(--p2);color:var(--text);padding:1.5rem;width:min(92vw,360px)}dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--primary);margin-bottom:1rem}
+dialog label{display:grid;gap:4px;font-size:.85rem;opacity:.85;margin-bottom:.9rem}
+dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text)}
+#log-err{color:var(--secondary);min-height:1.2em;font-size:.85rem;margin-bottom:.6rem}.drow{display:flex;gap:.6rem;justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -97,6 +108,7 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
   <header>
     <div class="logo">⚡ SMART REMOTE IOT</div>
     <div class="hr">
+      <div class="who" id="whoami">Hanya baca</div><button class="pill" id="auth-btn">LOGIN</button>
       <div class="time-date"><div class="time" id="current-time">00:00:00</div><div class="date" id="current-date">Loading...</div></div>
       <button class="theme-btn" id="theme-btn" aria-label="Ganti tema terang/gelap"><i class="fas fa-sun"></i></button>
     </div>
@@ -104,10 +116,12 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
 
   <div class="connection-status connecting" id="connection-status"><i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...</div>
 
+  <div class="ro" id="ro"><i class="fas fa-lock"></i> Mode hanya-baca. Login untuk mengontrol lampu, kipas, dan remote.</div>
+
   <div class="device-info">
     <div class="info-chip" id="device-chip"><span class="label">STATUS ALAT (ESP32)</span><span class="value" id="device-state">MENUNGGU...</span></div>
     <div class="info-chip"><span class="label">AKTIVITAS TERAKHIR</span><span class="value" id="activity">-</span></div>
-    <div class="info-chip"><span class="label">SUHU &amp; KELEMBAPAN</span><span class="value" id="sensor">--°C · --%</span></div>
+    
   </div>
 
   <div class="panel">
@@ -115,6 +129,7 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
     <div class="devices-grid">
       <div class="device-card" data-device="lamp"><div class="device-icon"><i class="fas fa-lightbulb"></i></div><div class="device-name">Lampu</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
       <div class="device-card" data-device="fan"><div class="device-icon"><i class="fas fa-fan"></i></div><div class="device-name">Kipas</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
+      <div class="device-card sensor-card"><div class="device-icon"><i class="fas fa-temperature-half"></i></div><div class="device-name">Suhu &amp; Lembap</div><div class="sv"><span id="s-temp">--</span><small>°C</small></div><div class="sv hum"><i class="fas fa-droplet"></i><span id="s-hum">--</span><small>%</small></div></div>
     </div>
   </div>
 
@@ -129,7 +144,7 @@ footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span
       <small>Tombol cadangan di bawah: pelajari satu per satu bila merek AC tidak terdeteksi.</small>
     </div>
     <div class="remote" id="remote"><div class="ir" id="ir"></div><div class="rname"><span id="rn"></span><small id="rs"></small></div><div class="rows" id="grid"></div></div>
-    <div class="learnbar"><span id="hint">Tombol bergaris putus belum dipelajari.</span><button class="pill" id="learn" aria-pressed="false">MODE BELAJAR</button></div>
+    <div class="learnbar"><span id="hint">Tombol bergaris putus belum dipelajari.</span><button class="pill" id="learn" aria-pressed="false">MODE RECEIVE</button></div>
   </div>
 
   <footer>Designed by <span>ATTAMATION</span></footer>
@@ -171,6 +186,8 @@ const R={
 };
 const $=s=>document.querySelector(s);
 const learned={proj:new Set(),sound:new Set(),night:new Set(),ac:new Set()};
+const cid=Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
+let sess=null,q=Promise.resolve();const waiters={};
 let cur='proj',learn=false,isConnected=false,deviceOnline=null,pending={};
 const TIMEOUT=5000;
 
@@ -192,10 +209,11 @@ const client=new Paho.MQTT.Client(mqttConfig.host,mqttConfig.port,mqttConfig.cli
 client.onConnectionLost=r=>{isConnected=false;deviceOnline=null;updateConnectionStatus('disconnected');updateDeviceChip();refreshControls();showNotification('Koneksi MQTT terputus! Mencoba reconnect...');setTimeout(connectMQTT,5000)};
 client.onMessageArrived=msg=>{
  const t=msg.destinationName.slice(P.length),m=msg.payloadString;
+ if(t.startsWith('auth/')){if(waiters[t])waiters[t](m);else if(t==='auth/res/'+cid)authRes(m);return}
  if(t==='lamp/state'||t==='fan/state'){const id=t.split('/')[0];syncDeviceState(id,m);clearPending(id)}
  else if(t==='status')setDeviceOnline(m==='online');
  else if(t.endsWith('/learned')&&learned[t.split('/')[0]]){try{learned[t.split('/')[0]]=new Set(JSON.parse(m));renderRemote()}catch(e){}}
- else if(t==='sensor'){try{const o=JSON.parse(m);$('#sensor').textContent=o.temp.toFixed(1)+'°C · '+Math.round(o.hum)+'%'}catch(e){}}
+ else if(t==='sensor'){try{const o=JSON.parse(m);$('#s-temp').textContent=o.temp.toFixed(1);$('#s-hum').textContent=Math.round(o.hum)}catch(e){}}
  else if(t==='ac/state'){try{acs=JSON.parse(m);renderAc()}catch(e){}}
  else if(t==='learnstate')onLearnState(m);
 };
@@ -203,21 +221,27 @@ function connectMQTT(){
  updateConnectionStatus('connecting');
  client.connect({useSSL:true,userName:mqttConfig.username,password:mqttConfig.password,
   onSuccess:()=>{isConnected=true;updateConnectionStatus('connected');refreshControls();showNotification('Berhasil terhubung ke MQTT broker!');
-   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','learnstate'].forEach(x=>client.subscribe(P+x))},
+   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','learnstate'].forEach(x=>client.subscribe(P+x));client.subscribe(P+'auth/chal/'+cid);client.subscribe(P+'auth/res/'+cid)},
   onFailure:e=>{isConnected=false;updateConnectionStatus('disconnected');refreshControls();showNotification('Gagal terhubung! Retry dalam 5 detik...');setTimeout(connectMQTT,5000)}});
 }
-function publishMessage(topic,payload){if(!client.isConnected())return false;const m=new Paho.MQTT.Message(payload);m.destinationName=P+topic;client.send(m);return true}
+function rawPub(sub,pl){const m=new Paho.MQTT.Message(pl);m.destinationName=P+sub;client.send(m)}
+function publishMessage(topic,payload){
+ if(!sess){showNotification('Mode hanya-baca. Login untuk mengontrol.');return false}
+ if(!client.isConnected())return false;
+ const s=sess;
+ q=q.then(async()=>{const n=++s.ctr,base=cid+'|'+n+'|'+topic+'|'+payload;rawPub('cmd',base+'|'+hex(await hmacKey(s.key,base)))}).catch(()=>{});
+ return true}
 
 // ----- status alat & kontrol -----
 function updateDeviceChip(){const c=$('#device-chip'),v=$('#device-state');c.classList.remove('online','offline');
  if(deviceOnline===true){c.classList.add('online');v.textContent='ONLINE'}else if(deviceOnline===false){c.classList.add('offline');v.textContent='OFFLINE'}else v.textContent='MENUNGGU...'}
-function refreshControls(){const ok=isConnected&&deviceOnline!==false;
- document.querySelectorAll('.device-card').forEach(c=>{c.classList.toggle('disabled',!ok);if(!ok)c.classList.remove('loading');c.querySelector('input').disabled=!ok})}
+function refreshControls(){const ok=isConnected&&deviceOnline!==false&&!!sess;
+ document.querySelectorAll('.device-card[data-device]').forEach(c=>{c.classList.toggle('disabled',!ok);if(!ok)c.classList.remove('loading');c.querySelector('input').disabled=!ok})}
 function setDeviceOnline(o){const ch=deviceOnline!==o;deviceOnline=o;updateDeviceChip();if(!o)Object.keys(pending).forEach(clearPending);refreshControls();if(ch)showNotification(o?'Alat ESP32 online.':'Alat ESP32 OFFLINE. Kontrol dinonaktifkan.')}
 function syncDeviceState(id,state){const c=document.querySelector(`.device-card[data-device="${id}"]`);if(!c)return;const on=state==='ON';
  c.querySelector('input').checked=on;c.querySelector('.device-status').textContent=state;c.classList.toggle('active',on);c.classList.remove('loading')}
 function clearPending(id){if(pending[id]){clearTimeout(pending[id]);delete pending[id]}const c=document.querySelector(`.device-card[data-device="${id}"]`);if(c)c.classList.remove('loading')}
-function setupDeviceControls(){document.querySelectorAll('.device-card').forEach(card=>{
+function setupDeviceControls(){document.querySelectorAll('.device-card[data-device]').forEach(card=>{
  const tg=card.querySelector('input'),id=card.dataset.device;
  tg.addEventListener('change',function(){
   if(!isConnected){showNotification('Tidak terhubung ke MQTT! Tidak dapat mengontrol.');this.checked=!this.checked;return}
@@ -252,13 +276,14 @@ function renderAc(){$('#ac-proto').textContent=acs.proto==='-'?'belum terdeteksi
 function setupAc(){acGroup('#ac-mode',AM,'mode');acGroup('#ac-fan',AF,'fan');
  $('#ac-up').onclick=()=>acCmd('temp:'+(acs.temp+1));$('#ac-dn').onclick=()=>acCmd('temp:'+(acs.temp-1));
  $('#ac-pwr').onclick=()=>acCmd('power:'+(acs.power?'off':'on'));$('#ac-swing').onclick=()=>acCmd('swing:'+(acs.swing?'off':'on'));
- $('#ac-detect').onclick=()=>{if(isConnected)publishMessage('learn','ac:detect');else showNotification('Belum terhubung ke broker')};renderAc()}
+ $('#ac-detect').onclick=()=>{if(!sess||sess.role<2){showNotification('Deteksi AC khusus admin. Login dulu.');return}if(isConnected)publishMessage('learn','ac:detect');else showNotification('Belum terhubung ke broker')};renderAc()}
 function press(key,btn){try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
  if(!isConnected){showNotification('Belum terhubung ke broker');return}
+ if(!sess){showNotification('Mode hanya-baca. Login untuk mengontrol.');return}
  if(learn){publishMessage('learn',cur+':'+key);btn.classList.add('hit');return}
- if(!learned[cur].has(key)){showNotification('Tombol belum dipelajari. Aktifkan MODE BELAJAR.');return}
+ if(!learned[cur].has(key)){showNotification('Tombol belum dipelajari. Aktifkan MODE RECEIVE.');return}
  publishMessage(cur+'/send',key);const ir=$('#ir');ir.classList.add('fire');setTimeout(()=>ir.classList.remove('fire'),120)}
-$('#learn').onclick=e=>{learn=!learn;e.currentTarget.setAttribute('aria-pressed',learn);$('#hint').textContent=learn?'Ketuk tombol di layar, lalu tekan tombol yang sama di remote asli ke arah sensor (15 dtk).':HINT;renderRemote()};
+$('#learn').onclick=e=>{if(!sess||sess.role<2){showNotification('Mode Receive khusus admin. Login dulu.');return}learn=!learn;e.currentTarget.setAttribute('aria-pressed',learn);$('#hint').textContent=learn?'Ketuk tombol di layar, lalu tekan tombol yang sama di remote asli ke arah sensor (15 dtk).':HINT;renderRemote()};
 function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev].tab:dev;
  if(st==='waiting')showNotification('Tekan tombol di remote asli sekarang…');
  else if(st==='ok'){showNotification(`Tersimpan: ${name} / ${key} (${extra})`);$('#activity').textContent=`${name}: ${key} dipelajari`;learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}
@@ -268,8 +293,38 @@ function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev
  else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32');
  else if(st==='acnone')showNotification('Merek AC belum terdeteksi. Tekan DETEKSI REMOTE AC dulu.')}
 
-function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
+// ----- login (challenge-response; password tidak pernah dikirim) -----
+const enc=new TextEncoder(),hex=b=>Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+async function sha256b(str){return new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(str)))}
+async function hmacRaw(keyBytes,msg){const k=await crypto.subtle.importKey('raw',keyBytes,{name:'HMAC',hash:'SHA-256'},false,['sign']);return new Uint8Array(await crypto.subtle.sign('HMAC',k,enc.encode(msg)))}
+async function hmacKey(key,msg){return new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(msg)))}
+function waitFor(t,ms){return new Promise((ok,no)=>{const h=setTimeout(()=>{delete waiters[t];no(new Error('timeout'))},ms);waiters[t]=v=>{clearTimeout(h);delete waiters[t];ok(v)}})}
+async function doLogin(u,p){
+ if(!(window.crypto&&crypto.subtle))throw new Error('Login butuh HTTPS atau localhost');
+ const c=waitFor('auth/chal/'+cid,8000);rawPub('auth/hello',cid+':'+u);const ns=await c;
+ const H=await sha256b('esp32ir|'+u+'|'+p),nc=hex(crypto.getRandomValues(new Uint8Array(16)));
+ const r=waitFor('auth/res/'+cid,8000);rawPub('auth/proof',cid+':'+nc+':'+hex(await hmacRaw(H,'P|'+cid+'|'+ns+'|'+nc)));
+ const res=await r;if(!res.startsWith('ok:'))throw new Error(res.replace('fail:',''));
+ const [,role,user]=res.split(':'),K=await hmacRaw(H,'K|'+cid+'|'+ns+'|'+nc);
+ sess={key:await crypto.subtle.importKey('raw',K,{name:'HMAC',hash:'SHA-256'},false,['sign']),ctr:0,role:+role,user}}
+function authRes(m){if(m==='deny'){sess=null;updateAuthUI();showNotification('Sesi berakhir. Login lagi.')}else if(m==='forbidden')showNotification('Akses ditolak untuk akun ini.')}
+function updateAuthUI(){$('#auth-btn').textContent=sess?'KELUAR':'LOGIN';$('#whoami').textContent=sess?sess.user+' · '+(sess.role>=2?'admin':'pengguna'):'Hanya baca';$('#ro').hidden=!!sess;
+ $('#learn').disabled=!(sess&&sess.role>=2);if(!(sess&&sess.role>=2)&&learn){learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}refreshControls()}
+$('#auth-btn').onclick=()=>{if(sess){publishMessage('logout','');q=q.then(()=>{sess=null;updateAuthUI();showNotification('Anda telah keluar.')})}else{$('#log-err').textContent='';$('#logdlg').showModal()}};
+$('#log-cancel').onclick=()=>$('#logdlg').close();
+$('#logform').onsubmit=async e=>{e.preventDefault();const b=$('#log-go');b.disabled=true;$('#log-err').textContent='';
+ try{if(!isConnected)throw new Error('Belum terhubung ke broker');await doLogin($('#log-user').value.trim(),$('#log-pass').value);$('#log-pass').value='';$('#logdlg').close();updateAuthUI();showNotification('Login berhasil: '+sess.user)}
+ catch(err){const m=err.message;$('#log-err').textContent=m==='timeout'?'ESP32 tidak merespons (offline?)':m==='salah'?'Username atau password salah':m==='terkunci'?'Terlalu banyak percobaan. Coba lagi 1 menit.':m}
+ b.disabled=false};
+
+function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();updateAuthUI();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
 window.addEventListener('DOMContentLoaded',init);
 </script>
+<dialog id="logdlg"><form id="logform"><h2>Login</h2>
+  <label>Username<input id="log-user" autocomplete="username" autocapitalize="off" required></label>
+  <label>Password<input id="log-pass" type="password" autocomplete="current-password" required></label>
+  <div id="log-err" role="alert"></div>
+  <div class="drow"><button type="button" class="pill" id="log-cancel">BATAL</button><button class="pill" id="log-go" aria-pressed="true">MASUK</button></div>
+</form></dialog>
 </body>
 </html>
