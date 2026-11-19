@@ -101,6 +101,11 @@ dialog h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--primary
 dialog label{display:grid;gap:4px;font-size:.85rem;opacity:.85;margin-bottom:.9rem}
 dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text)}
 #log-err{color:var(--secondary);min-height:1.2em;font-size:.85rem;margin-bottom:.6rem}.drow{display:flex;gap:.6rem;justify-content:flex-end}
+.sensor-top{flex-direction:row;justify-content:space-around;flex-wrap:wrap;gap:1.5rem;max-width:960px;margin:0 auto 1.5rem;padding:1.5rem 2rem}
+.sblock{display:flex;align-items:center;gap:1.2rem}.sblock .device-icon{margin:0;font-size:3.2rem}.sblock .device-name{margin-bottom:.3rem;font-size:1rem}
+dialog select{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text)}
+.pw{position:relative;display:block}.pw input{width:100%;padding-right:2.8rem}
+.eye{position:absolute;right:.3rem;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--text);opacity:.7;cursor:pointer;padding:.5rem .7rem;font-size:1rem}.eye:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -113,6 +118,11 @@ dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px soli
       <button class="theme-btn" id="theme-btn" aria-label="Ganti tema terang/gelap"><i class="fas fa-sun"></i></button>
     </div>
   </header>
+
+  <div class="device-card sensor-card sensor-top">
+    <div class="sblock"><div class="device-icon"><i class="fas fa-temperature-half"></i></div><div><div class="device-name">Suhu</div><div class="sv"><span id="s-temp">--</span><small>°C</small></div></div></div>
+    <div class="sblock"><div class="device-icon"><i class="fas fa-droplet"></i></div><div><div class="device-name">Kelembapan</div><div class="sv"><span id="s-hum">--</span><small>%</small></div></div></div>
+  </div>
 
   <div class="connection-status connecting" id="connection-status"><i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...</div>
 
@@ -129,7 +139,6 @@ dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px soli
     <div class="devices-grid">
       <div class="device-card" data-device="lamp"><div class="device-icon"><i class="fas fa-lightbulb"></i></div><div class="device-name">Lampu</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
       <div class="device-card" data-device="fan"><div class="device-icon"><i class="fas fa-fan"></i></div><div class="device-name">Kipas</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
-      <div class="device-card sensor-card"><div class="device-icon"><i class="fas fa-temperature-half"></i></div><div class="device-name">Suhu &amp; Lembap</div><div class="sv"><span id="s-temp">--</span><small>°C</small></div><div class="sv hum"><i class="fas fa-droplet"></i><span id="s-hum">--</span><small>%</small></div></div>
     </div>
   </div>
 
@@ -151,6 +160,13 @@ dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px soli
 </div>
 
 <div class="notification" id="notification"><div class="notification-title"><i class="fas fa-info-circle"></i> NOTIFIKASI SISTEM</div><div id="notification-message"></div></div>
+
+<dialog id="logdlg"><form id="logform"><h2>Login</h2>
+  <label>Username<select id="log-user" required><option value="">Memuat daftar akun…</option></select></label>
+  <label>Password<span class="pw"><input id="log-pass" type="password" autocomplete="current-password" required><button type="button" class="eye" id="log-eye" aria-label="Tampilkan password"><i class="fas fa-eye"></i></button></span></label>
+  <div id="log-err" role="alert"></div>
+  <div class="drow"><button type="button" class="pill" id="log-cancel">BATAL</button><button class="pill" id="log-go" aria-pressed="true">MASUK</button></div>
+</form></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 <script>
@@ -209,6 +225,7 @@ const client=new Paho.MQTT.Client(mqttConfig.host,mqttConfig.port,mqttConfig.cli
 client.onConnectionLost=r=>{isConnected=false;deviceOnline=null;updateConnectionStatus('disconnected');updateDeviceChip();refreshControls();showNotification('Koneksi MQTT terputus! Mencoba reconnect...');setTimeout(connectMQTT,5000)};
 client.onMessageArrived=msg=>{
  const t=msg.destinationName.slice(P.length),m=msg.payloadString;
+ if(t==='auth/users'){fillUsers(m);return}
  if(t.startsWith('auth/')){if(waiters[t])waiters[t](m);else if(t==='auth/res/'+cid)authRes(m);return}
  if(t==='lamp/state'||t==='fan/state'){const id=t.split('/')[0];syncDeviceState(id,m);clearPending(id)}
  else if(t==='status')setDeviceOnline(m==='online');
@@ -221,7 +238,7 @@ function connectMQTT(){
  updateConnectionStatus('connecting');
  client.connect({useSSL:true,userName:mqttConfig.username,password:mqttConfig.password,
   onSuccess:()=>{isConnected=true;updateConnectionStatus('connected');refreshControls();showNotification('Berhasil terhubung ke MQTT broker!');
-   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','learnstate'].forEach(x=>client.subscribe(P+x));client.subscribe(P+'auth/chal/'+cid);client.subscribe(P+'auth/res/'+cid)},
+   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','auth/users','learnstate'].forEach(x=>client.subscribe(P+x));client.subscribe(P+'auth/chal/'+cid);client.subscribe(P+'auth/res/'+cid)},
   onFailure:e=>{isConnected=false;updateConnectionStatus('disconnected');refreshControls();showNotification('Gagal terhubung! Retry dalam 5 detik...');setTimeout(connectMQTT,5000)}});
 }
 function rawPub(sub,pl){const m=new Paho.MQTT.Message(pl);m.destinationName=P+sub;client.send(m)}
@@ -293,6 +310,11 @@ function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev
  else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32');
  else if(st==='acnone')showNotification('Merek AC belum terdeteksi. Tekan DETEKSI REMOTE AC dulu.')}
 
+function fillUsers(m){const sel=$('#log-user');let last='';try{last=localStorage.getItem('lastUser')||''}catch(e){}
+ const list=m.split(',').map(x=>x.trim()).filter(Boolean);sel.innerHTML='';
+ list.forEach(u=>{const o=document.createElement('option');o.value=o.textContent=u;sel.append(o)});if(list.includes(last))sel.value=last}
+$('#log-eye').onclick=()=>{const i=$('#log-pass'),show=i.type==='password';i.type=show?'text':'password';$('#log-eye').innerHTML=show?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>';$('#log-eye').setAttribute('aria-label',show?'Sembunyikan password':'Tampilkan password')}
+$('#logdlg').addEventListener('close',()=>{$('#log-pass').type='password';$('#log-eye').innerHTML='<i class="fas fa-eye"></i>'});
 // ----- login (challenge-response; password tidak pernah dikirim) -----
 const enc=new TextEncoder(),hex=b=>Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
 async function sha256b(str){return new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(str)))}
@@ -313,18 +335,13 @@ function updateAuthUI(){$('#auth-btn').textContent=sess?'KELUAR':'LOGIN';$('#who
 $('#auth-btn').onclick=()=>{if(sess){publishMessage('logout','');q=q.then(()=>{sess=null;updateAuthUI();showNotification('Anda telah keluar.')})}else{$('#log-err').textContent='';$('#logdlg').showModal()}};
 $('#log-cancel').onclick=()=>$('#logdlg').close();
 $('#logform').onsubmit=async e=>{e.preventDefault();const b=$('#log-go');b.disabled=true;$('#log-err').textContent='';
- try{if(!isConnected)throw new Error('Belum terhubung ke broker');await doLogin($('#log-user').value.trim(),$('#log-pass').value);$('#log-pass').value='';$('#logdlg').close();updateAuthUI();showNotification('Login berhasil: '+sess.user)}
+ try{if(!isConnected)throw new Error('Belum terhubung ke broker');await doLogin($('#log-user').value.trim(),$('#log-pass').value);try{localStorage.setItem('lastUser',sess.user)}catch(e){}$('#log-pass').value='';$('#logdlg').close();updateAuthUI();showNotification('Login berhasil: '+sess.user)}
  catch(err){const m=err.message;$('#log-err').textContent=m==='timeout'?'ESP32 tidak merespons (offline?)':m==='salah'?'Username atau password salah':m==='terkunci'?'Terlalu banyak percobaan. Coba lagi 1 menit.':m}
  b.disabled=false};
 
 function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();updateAuthUI();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
 window.addEventListener('DOMContentLoaded',init);
 </script>
-<dialog id="logdlg"><form id="logform"><h2>Login</h2>
-  <label>Username<input id="log-user" autocomplete="username" autocapitalize="off" required></label>
-  <label>Password<input id="log-pass" type="password" autocomplete="current-password" required></label>
-  <div id="log-err" role="alert"></div>
-  <div class="drow"><button type="button" class="pill" id="log-cancel">BATAL</button><button class="pill" id="log-go" aria-pressed="true">MASUK</button></div>
-</form></dialog>
+
 </body>
 </html>
