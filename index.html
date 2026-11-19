@@ -1,825 +1,206 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atamation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --primary: #00f7ff;
-            --secondary: #ff00aa;
-            --dark: #0a0a1a;
-            --darker: #050510;
-            --light: #e0e0ff;
-            --accent: #7b2dff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--dark);
-            color: var(--light);
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(123, 45, 255, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0, 247, 255, 0.1) 0%, transparent 20%);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3rem;
-            border-bottom: 1px solid rgba(0, 247, 255, 0.3);
-            padding-bottom: 1rem;
-        }
-
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
-        }
-
-        .time-date {
-            font-family: 'Orbitron', sans-serif;
-            text-align: right;
-        }
-
-        .time {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-
-        .date {
-            font-size: 0.9rem;
-            color: var(--light);
-            opacity: 0.8;
-        }
-
-        .connection-status {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 500;
-            font-size: 1rem;
-            border: 1px solid;
-            animation: pulse 2s infinite;
-        }
-
-        .connection-status.connected {
-            background: rgba(0, 247, 255, 0.1);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .connection-status.disconnected {
-            background: rgba(255, 0, 170, 0.1);
-            border-color: var(--secondary);
-            color: var(--secondary);
-        }
-
-        .connection-status.connecting {
-            background: rgba(123, 45, 255, 0.1);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .panel {
-            background: linear-gradient(145deg, rgba(10, 10, 26, 0.8), rgba(5, 5, 16, 0.9));
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 247, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            z-index: -1;
-            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
-            border-radius: 16px;
-            opacity: 0.3;
-        }
-
-        .panel-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-transform: uppercase;
-        }
-
-        .panel-title i {
-            margin-right: 0.7rem;
-            font-size: 1.7rem;
-        }
-
-        .devices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .device-card {
-            background: rgba(20, 20, 40, 0.6);
-            border-radius: 15px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 247, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .device-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 247, 255, 0.2);
-            border-color: rgba(0, 247, 255, 0.3);
-        }
-
-        .device-card.active {
-            background: rgba(0, 247, 255, 0.1);
-            border-color: var(--primary);
-            box-shadow: 0 0 30px rgba(0, 247, 255, 0.3);
-        }
-
-        .device-card.active::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .device-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            color: var(--light);
-            transition: all 0.3s ease;
-        }
-
-        .device-card.active .device-icon {
-            color: var(--primary);
-            text-shadow: 0 0 20px rgba(0, 247, 255, 0.8);
-            animation: glow 2s infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 20px rgba(0, 247, 255, 0.8); }
-            50% { text-shadow: 0 0 30px rgba(0, 247, 255, 1); }
-        }
-
-        .device-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .device-status {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            color: var(--secondary);
-            text-transform: uppercase;
-            margin-bottom: 1.5rem;
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            background: rgba(255, 0, 170, 0.1);
-            border: 1px solid var(--secondary);
-        }
-
-        .device-card.active .device-status {
-            color: var(--primary);
-            background: rgba(0, 247, 255, 0.1);
-            border-color: var(--primary);
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 70px;
-            height: 34px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-switch input:disabled + .slider {
-            cursor: not-allowed;
-            opacity: 0.4;
-        }
-
-        .device-card.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .device-card.loading {
-            opacity: 0.7;
-        }
-
-        .device-card.loading .device-icon {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            transition: .4s;
-            border-radius: 34px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 24px;
-            width: 24px;
-            left: 3px;
-            bottom: 3px;
-            background-color: var(--light);
-            transition: .4s;
-            border-radius: 50%;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-
-        input:checked + .slider {
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            border-color: var(--primary);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(36px);
-            background-color: var(--dark);
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
-        }
-
-
-
-        .notification {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: rgba(10, 10, 26, 0.95);
-            border-left: 4px solid var(--primary);
-            padding: 1.2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transform: translateX(200%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            max-width: 350px;
-            border: 1px solid rgba(0, 247, 255, 0.3);
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification-title {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .notification-message {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            color: var(--light);
-        }
-
-        .device-info {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 2rem;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .info-chip {
-            flex: 1 1 220px;
-            padding: 0.8rem 1rem;
-            border-radius: 10px;
-            text-align: center;
-            background: rgba(20, 20, 40, 0.6);
-            border: 1px solid rgba(0, 247, 255, 0.2);
-        }
-
-        .info-chip .label {
-            display: block;
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-            opacity: 0.6;
-            margin-bottom: 0.3rem;
-        }
-
-        .info-chip .value {
-            font-size: 0.95rem;
-            color: var(--light);
-        }
-
-        .info-chip.online { border-color: var(--primary); }
-        .info-chip.online .value { color: var(--primary); }
-        .info-chip.offline { border-color: var(--secondary); }
-        .info-chip.offline .value { color: var(--secondary); }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .logo {
-                font-size: 1.5rem;
-            }
-
-            .time {
-                font-size: 1.2rem;
-            }
-
-            .devices-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .device-card {
-                padding: 1.5rem;
-            }
-
-            .notification {
-                right: 1rem;
-                left: 1rem;
-                max-width: none;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atamation - Smart Remote</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+:root{--primary:#00f7ff;--secondary:#ff00aa;--accent:#7b2dff;--bg:#0a0a1a;--text:#e0e0ff;--card:rgba(20,20,40,.6);--p1:rgba(10,10,26,.8);--p2:rgba(5,5,16,.9);--key:rgba(30,30,60,.8);--toast:rgba(10,10,26,.95);--glow:0 0 20px rgba(0,247,255,.8);--shadow:0 10px 30px rgba(0,0,0,.3);--g1:rgba(123,45,255,.1);--g2:rgba(0,247,255,.1);color-scheme:dark}
+[data-theme=light]{--primary:#007f99;--secondary:#d6007f;--accent:#6a1fe0;--bg:#eef1fb;--text:#1b1b3a;--card:rgba(255,255,255,.75);--p1:rgba(255,255,255,.9);--p2:rgba(244,246,255,.95);--key:#fff;--toast:rgba(255,255,255,.97);--glow:0 0 14px rgba(0,127,153,.35);--shadow:0 10px 30px rgba(60,60,120,.15);--g1:rgba(123,45,255,.08);--g2:rgba(0,200,255,.1);color-scheme:light}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;background-image:radial-gradient(circle at 10% 20%,var(--g1),transparent 20%),radial-gradient(circle at 90% 80%,var(--g2),transparent 20%)}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:2.5rem;border-bottom:1px solid color-mix(in srgb,var(--primary) 30%,transparent);padding-bottom:1rem}
+.logo{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;background:linear-gradient(90deg,var(--primary),var(--secondary));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hr{display:flex;align-items:center;gap:1rem}
+.time-date{font-family:'Orbitron',sans-serif;text-align:right}.time{font-size:1.5rem;color:var(--primary)}.date{font-size:.9rem;opacity:.8}
+.theme-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--primary);background:var(--card);color:var(--primary);font-size:1.1rem;cursor:pointer;transition:.3s}
+.theme-btn:hover{box-shadow:var(--glow)}
+.connection-status{text-align:center;padding:1rem;border-radius:10px;margin-bottom:1.5rem;font-family:'Orbitron',sans-serif;font-weight:500;border:1px solid;animation:pulse 2s infinite}
+.connection-status.connected{background:color-mix(in srgb,var(--primary) 10%,transparent);border-color:var(--primary);color:var(--primary)}
+.connection-status.disconnected{background:color-mix(in srgb,var(--secondary) 10%,transparent);border-color:var(--secondary);color:var(--secondary)}
+.connection-status.connecting{background:color-mix(in srgb,var(--accent) 10%,transparent);border-color:var(--accent);color:var(--accent)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.device-info{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;font-family:'Orbitron',sans-serif}
+.info-chip{flex:1 1 220px;padding:.8rem 1rem;border-radius:10px;text-align:center;background:var(--card);border:1px solid color-mix(in srgb,var(--primary) 20%,transparent)}
+.info-chip .label{display:block;font-size:.7rem;letter-spacing:1px;opacity:.6;margin-bottom:.3rem}.info-chip .value{font-size:.95rem}
+.info-chip.online{border-color:var(--primary)}.info-chip.online .value{color:var(--primary)}
+.info-chip.offline{border-color:var(--secondary)}.info-chip.offline .value{color:var(--secondary)}
+.panel{background:linear-gradient(145deg,var(--p1),var(--p2));border-radius:15px;padding:2rem;box-shadow:var(--shadow);border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);margin-bottom:2rem}
+.panel-title{font-family:'Orbitron',sans-serif;font-size:1.4rem;margin-bottom:1.8rem;color:var(--primary);display:flex;align-items:center;justify-content:center;text-transform:uppercase;gap:.7rem}
+.devices-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;max-width:700px;margin:0 auto}
+.device-card{background:var(--card);border-radius:15px;padding:2rem;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:.3s;border:1px solid color-mix(in srgb,var(--primary) 15%,transparent);position:relative;overflow:hidden}
+.device-card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--primary) 40%,transparent)}
+.device-card.active{background:color-mix(in srgb,var(--primary) 12%,var(--card));border-color:var(--primary)}
+.device-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary))}
+.device-icon{font-size:3.6rem;margin-bottom:1.2rem;transition:.3s}
+.device-card.active .device-icon{color:var(--primary);text-shadow:var(--glow)}
+.device-name{font-family:'Orbitron',sans-serif;font-size:1.2rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:2px}
+.device-status{font-family:'Orbitron',sans-serif;color:var(--secondary);margin-bottom:1.3rem;padding:.5rem 1.5rem;border-radius:20px;background:color-mix(in srgb,var(--secondary) 10%,transparent);border:1px solid var(--secondary)}
+.device-card.active .device-status{color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,transparent);border-color:var(--primary)}
+.device-card.disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+.device-card.loading{opacity:.7}.device-card.loading .device-icon{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toggle-switch{position:relative;width:70px;height:34px}.toggle-switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:color-mix(in srgb,var(--text) 12%,transparent);transition:.4s;border-radius:34px;border:2px solid color-mix(in srgb,var(--text) 25%,transparent)}
+.slider:before{position:absolute;content:"";height:24px;width:24px;left:3px;bottom:3px;background:var(--text);transition:.4s;border-radius:50%}
+input:checked+.slider{background:linear-gradient(90deg,var(--primary),var(--accent));border-color:var(--primary)}
+input:checked+.slider:before{transform:translateX(36px);background:#fff}
+.tabs{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.6rem}
+.tab{font-family:'Orbitron',sans-serif;font-size:.85rem;text-transform:uppercase;padding:.6rem 1.2rem;border-radius:20px;border:1px solid color-mix(in srgb,var(--primary) 30%,transparent);background:var(--card);color:var(--text);cursor:pointer;transition:.3s}
+.tab[aria-selected=true]{border-color:var(--primary);color:var(--primary);box-shadow:var(--glow)}
+.remote{max-width:340px;margin:0 auto;background:#2b2e31;border-radius:38px 38px 30px 30px;padding:18px 22px 26px;color:#eceeef;box-shadow:0 18px 30px -18px rgba(0,0,0,.55)}
+.ir{height:16px;border-radius:0 0 12px 12px;background:#14161a;margin:-18px auto 14px;width:84px;transition:background .1s}
+.ir.fire{background:#ff4d3a;box-shadow:0 0 14px #ff4d3a}
+.rname{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;font-size:.85rem;color:#a9afb2}
+.rname span{color:#eceeef;font-size:1rem;font-weight:600}.rname small{display:inline;opacity:1;margin:0;font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.k{height:58px;border:0;border-radius:18px;background:#3b3f43;color:#eceeef;font:inherit;font-size:1rem;cursor:pointer;transition:transform .06s,background .15s}
+.k:hover{background:#494e53}.k:active{transform:scale(.94)}
+.k.pwr{background:#d4443d;color:#fff}.k.ok{border-radius:50%;background:#4b5258}
+.k.new{opacity:.5;outline:1.5px dashed #7c8387;outline-offset:-4px}
+.learning .k{outline:2px solid #2f8cff;outline-offset:-3px;opacity:1}
+.learning .k.hit{background:#2f8cff;color:#fff}
+.learnbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;max-width:340px;margin:1.2rem auto 0;font-size:.85rem}
+.learnbar span{opacity:.7;flex:1 1 140px}
+.pill{font-family:'Orbitron',sans-serif;font-size:.8rem;padding:.5rem 1rem;border-radius:20px;border:1px solid var(--primary);background:none;color:var(--primary);cursor:pointer}
+.pill[aria-pressed=true]{background:var(--primary);color:var(--bg)}
+.notification{position:fixed;bottom:2rem;right:2rem;background:var(--toast);border-left:4px solid var(--primary);padding:1.1rem;border-radius:10px;box-shadow:var(--shadow);transform:translateX(200%);transition:transform .3s;z-index:1000;max-width:350px;border:1px solid color-mix(in srgb,var(--primary) 30%,transparent)}
+.notification.show{transform:translateX(0)}
+.notification-title{font-family:'Orbitron',sans-serif;color:var(--primary);margin-bottom:.4rem}
+footer{text-align:center;margin-top:2rem;font-size:.85rem;opacity:.6}footer span{color:var(--primary);font-weight:500}
+@media(max-width:768px){.container{padding:1rem}.logo{font-size:1.2rem}.time{font-size:1.1rem}.date{display:none}.notification{left:1rem;right:1rem;max-width:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">⚡ SMART RELAY IOT</div>
-            <div class="time-date">
-                <div class="time" id="current-time">00:00:00</div>
-                <div class="date" id="current-date">Loading...</div>
-            </div>
-        </header>
-
-        <div class="connection-status connecting" id="connection-status">
-            <i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...
-        </div>
-
-        <div class="device-info">
-            <div class="info-chip" id="device-chip">
-                <span class="label">STATUS ALAT (ESP32)</span>
-                <span class="value" id="device-state">MENUNGGU...</span>
-            </div>
-            <div class="info-chip">
-                <span class="label">TAMPILAN OLED / SUARA TERAKHIR</span>
-                <span class="value" id="voice-text">-</span>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-title">
-                <i class="fas fa-bolt"></i> KONTROL PERANGKAT
-            </div>
-
-            <div class="devices-grid">
-                <!-- Relay 1 -->
-                <div class="device-card" data-device="relay1">
-                    <div class="device-icon"><i class="fas fa-lightbulb"></i></div>
-                    <div class="device-name">Relay 1</div>
-                    <div class="device-status">OFF</div>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <!-- Relay 2 -->
-                <div class="device-card" data-device="relay2">
-                    <div class="device-icon"><i class="fas fa-plug"></i></div>
-                    <div class="device-name">Relay 2</div>
-                    <div class="device-status">OFF</div>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <!-- Relay 3 -->
-                <div class="device-card" data-device="relay3">
-                    <div class="device-icon"><i class="fas fa-fan"></i></div>
-                    <div class="device-name">Relay 3</div>
-                    <div class="device-status">OFF</div>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <!-- Relay 4 -->
-                <div class="device-card" data-device="relay4">
-                    <div class="device-icon"><i class="fas fa-power-off"></i></div>
-                    <div class="device-name">Relay 4</div>
-                    <div class="device-status">OFF</div>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-
-        </div>
-
-        <footer style="text-align: center; margin-top: 3rem; padding: 1rem; font-size: 0.85rem; color: rgba(224, 224, 255, 0.5); font-family: 'Roboto', sans-serif;">
-            Designed by <span style="color: var(--primary); font-weight: 500;">ATTAMATION</span>
-        </footer>
+<div class="container">
+  <header>
+    <div class="logo">⚡ SMART REMOTE IOT</div>
+    <div class="hr">
+      <div class="time-date"><div class="time" id="current-time">00:00:00</div><div class="date" id="current-date">Loading...</div></div>
+      <button class="theme-btn" id="theme-btn" aria-label="Ganti tema terang/gelap"><i class="fas fa-sun"></i></button>
     </div>
+  </header>
 
-    <div class="notification" id="notification">
-        <div class="notification-title">
-            <i class="fas fa-info-circle"></i> NOTIFIKASI SISTEM
-        </div>
-        <div class="notification-message" id="notification-message"></div>
+  <div class="connection-status connecting" id="connection-status"><i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...</div>
+
+  <div class="device-info">
+    <div class="info-chip" id="device-chip"><span class="label">STATUS ALAT (ESP32)</span><span class="value" id="device-state">MENUNGGU...</span></div>
+    <div class="info-chip"><span class="label">AKTIVITAS TERAKHIR</span><span class="value" id="activity">-</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-bolt"></i> KONTROL PERANGKAT</div>
+    <div class="devices-grid">
+      <div class="device-card" data-device="lamp"><div class="device-icon"><i class="fas fa-lightbulb"></i></div><div class="device-name">Lampu</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
+      <div class="device-card" data-device="fan"><div class="device-icon"><i class="fas fa-fan"></i></div><div class="device-name">Kipas</div><div class="device-status">OFF</div><label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label></div>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-    <script>
-        // Update time and date
-        function updateDateTime() {
-            const now = new Date();
-            const time = now.toLocaleTimeString('id-ID', { hour12: false });
-            document.getElementById('current-time').textContent = time;
-            
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const date = now.toLocaleDateString('id-ID', options);
-            document.getElementById('current-date').textContent = date;
-        }
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-tower-broadcast"></i> REMOTE IR</div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="remote"><div class="ir" id="ir"></div><div class="rname"><span id="rn"></span><small id="rs"></small></div><div class="grid" id="grid"></div></div>
+    <div class="learnbar"><span id="hint">Tombol bergaris putus belum dipelajari.</span><button class="pill" id="learn" aria-pressed="false">MODE BELAJAR</button></div>
+  </div>
 
-        // Show notification
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            const messageEl = document.getElementById('notification-message');
-            messageEl.textContent = message;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
-        }
+  <footer>Designed by <span>ATTAMATION</span></footer>
+</div>
 
+<div class="notification" id="notification"><div class="notification-title"><i class="fas fa-info-circle"></i> NOTIFIKASI SISTEM</div><div id="notification-message"></div></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+<script>
+// ===== Konfigurasi MQTT (otomatis terhubung, tanpa input manual) =====
+const mqttConfig={host:'3c745a388bec4b4fa3def162b723c4a4.s1.eu.hivemq.cloud',port:8884,clientId:'web_'+Math.random().toString(16).substr(2,8),username:'Ata_IOT',password:'Atalarik21'};
+const P='esp32ir/';   // harus sama dengan PREFIX di firmware
 
-        // Update connection status
-        function updateConnectionStatus(status) {
-            const statusEl = document.getElementById('connection-status');
-            
-            if (status === 'connected') {
-                statusEl.className = 'connection-status connected';
-                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> TERHUBUNG KE MQTT BROKER';
-            } else if (status === 'disconnected') {
-                statusEl.className = 'connection-status disconnected';
-                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> TERPUTUS DARI MQTT BROKER';
-            } else {
-                statusEl.className = 'connection-status connecting';
-                statusEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...';
-            }
-        }
+// Layout remote: [kunci, label, kelas]; null = kosong
+const R={
+ proj:{tab:'Proyektor',name:'XGODY Gimbal 3 Pro',rows:[[['power','⏻','pwr'],['source','Source'],['mute','Mute']],[['menu','Menu'],['up','▲'],['home','Home']],[['left','◀'],['ok','OK','ok'],['right','▶']],[['back','Back'],['down','▼'],null],[['vol_down','Vol −'],null,['vol_up','Vol +']]]},
+ sound:{tab:'Speaker',name:'Polytron PMA',rows:[[['power','⏻','pwr'],['mode','Mode'],['mute','Mute']],[['prev','⏮'],['play','⏯','ok'],['next','⏭']],[['vol_down','Vol −'],null,['vol_up','Vol +']]]},
+ night:{tab:'Lampu tidur',name:'Remote lampu tidur',rows:[[['on','On'],['off','Off','pwr'],['timer','Timer']],[['bri_up','Terang +'],null,['color','Warna']],[['bri_down','Terang −'],null,['mode','Mode']]]}
+};
+const $=s=>document.querySelector(s);
+const learned={proj:new Set(),sound:new Set(),night:new Set()};
+let cur='proj',learn=false,isConnected=false,deviceOnline=null,pending={};
+const TIMEOUT=5000;
 
-        // MQTT Configuration
-        const mqttConfig = {
-            host: '3c745a388bec4b4fa3def162b723c4a4.s1.eu.hivemq.cloud',
-            port: 8884,
-            clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-            username: 'Ata_IOT',
-            password: 'Atalarik21'
-        };
+// ----- tema -----
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme-btn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';try{localStorage.setItem('theme',t)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem('theme')}catch(e){}
+setTheme(saved||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+$('#theme-btn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 
-        // Track connection state and pending commands
-        let isConnected = false;
-        let pendingCommands = {};
-        const COMMAND_TIMEOUT = 5000; // 5 seconds timeout
+function updateDateTime(){const n=new Date();$('#current-time').textContent=n.toLocaleTimeString('id-ID',{hour12:false});$('#current-date').textContent=n.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+function showNotification(m){const n=$('#notification');$('#notification-message').textContent=m;n.classList.add('show');clearTimeout(showNotification.t);showNotification.t=setTimeout(()=>n.classList.remove('show'),4000)}
+function updateConnectionStatus(s){const e=$('#connection-status');
+ if(s==='connected'){e.className='connection-status connected';e.innerHTML='<i class="fas fa-check-circle"></i> TERHUBUNG KE MQTT BROKER'}
+ else if(s==='disconnected'){e.className='connection-status disconnected';e.innerHTML='<i class="fas fa-times-circle"></i> TERPUTUS DARI MQTT BROKER'}
+ else{e.className='connection-status connecting';e.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...'}}
 
-        // Initialize MQTT Client
-        const client = new Paho.MQTT.Client(
-            mqttConfig.host,
-            mqttConfig.port,
-            mqttConfig.clientId
-        );
+// ----- MQTT -----
+const client=new Paho.MQTT.Client(mqttConfig.host,mqttConfig.port,mqttConfig.clientId);
+client.onConnectionLost=r=>{isConnected=false;deviceOnline=null;updateConnectionStatus('disconnected');updateDeviceChip();refreshControls();showNotification('Koneksi MQTT terputus! Mencoba reconnect...');setTimeout(connectMQTT,5000)};
+client.onMessageArrived=msg=>{
+ const t=msg.destinationName.slice(P.length),m=msg.payloadString;
+ if(t==='lamp/state'||t==='fan/state'){const id=t.split('/')[0];syncDeviceState(id,m);clearPending(id)}
+ else if(t==='status')setDeviceOnline(m==='online');
+ else if(t.endsWith('/learned')&&learned[t.split('/')[0]]){try{learned[t.split('/')[0]]=new Set(JSON.parse(m));renderRemote()}catch(e){}}
+ else if(t==='learnstate')onLearnState(m);
+};
+function connectMQTT(){
+ updateConnectionStatus('connecting');
+ client.connect({useSSL:true,userName:mqttConfig.username,password:mqttConfig.password,
+  onSuccess:()=>{isConnected=true;updateConnectionStatus('connected');refreshControls();showNotification('Berhasil terhubung ke MQTT broker!');
+   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','learnstate'].forEach(x=>client.subscribe(P+x))},
+  onFailure:e=>{isConnected=false;updateConnectionStatus('disconnected');refreshControls();showNotification('Gagal terhubung! Retry dalam 5 detik...');setTimeout(connectMQTT,5000)}});
+}
+function publishMessage(topic,payload){if(!client.isConnected())return false;const m=new Paho.MQTT.Message(payload);m.destinationName=P+topic;client.send(m);return true}
 
-        // Connection lost callback
-        client.onConnectionLost = (response) => {
-            console.log('Connection lost:', response.errorMessage);
-            isConnected = false;
-            updateConnectionStatus('disconnected');
-            disableAllControls();
-            deviceOnline = null;
-            updateDeviceChip();
-            showNotification('Koneksi MQTT terputus! Mencoba reconnect...');
-            setTimeout(connectMQTT, 5000);
-        };
+// ----- status alat & kontrol -----
+function updateDeviceChip(){const c=$('#device-chip'),v=$('#device-state');c.classList.remove('online','offline');
+ if(deviceOnline===true){c.classList.add('online');v.textContent='ONLINE'}else if(deviceOnline===false){c.classList.add('offline');v.textContent='OFFLINE'}else v.textContent='MENUNGGU...'}
+function refreshControls(){const ok=isConnected&&deviceOnline!==false;
+ document.querySelectorAll('.device-card').forEach(c=>{c.classList.toggle('disabled',!ok);if(!ok)c.classList.remove('loading');c.querySelector('input').disabled=!ok})}
+function setDeviceOnline(o){const ch=deviceOnline!==o;deviceOnline=o;updateDeviceChip();if(!o)Object.keys(pending).forEach(clearPending);refreshControls();if(ch)showNotification(o?'Alat ESP32 online.':'Alat ESP32 OFFLINE. Kontrol dinonaktifkan.')}
+function syncDeviceState(id,state){const c=document.querySelector(`.device-card[data-device="${id}"]`);if(!c)return;const on=state==='ON';
+ c.querySelector('input').checked=on;c.querySelector('.device-status').textContent=state;c.classList.toggle('active',on);c.classList.remove('loading')}
+function clearPending(id){if(pending[id]){clearTimeout(pending[id]);delete pending[id]}const c=document.querySelector(`.device-card[data-device="${id}"]`);if(c)c.classList.remove('loading')}
+function setupDeviceControls(){document.querySelectorAll('.device-card').forEach(card=>{
+ const tg=card.querySelector('input'),id=card.dataset.device;
+ tg.addEventListener('change',function(){
+  if(!isConnected){showNotification('Tidak terhubung ke MQTT! Tidak dapat mengontrol.');this.checked=!this.checked;return}
+  card.classList.add('loading');publishMessage(id+'/set',this.checked?'ON':'OFF');
+  pending[id]=setTimeout(()=>{showNotification(`Timeout! Tidak ada respons dari ${id==='lamp'?'Lampu':'Kipas'}. Periksa koneksi ESP32.`);tg.checked=!tg.checked;card.classList.remove('loading');delete pending[id]},TIMEOUT)});
+ card.addEventListener('click',e=>{if(!isConnected)return;if(e.target!==tg&&!e.target.classList.contains('slider')){tg.checked=!tg.checked;tg.dispatchEvent(new Event('change'))}})})}
 
-        // Message arrived callback
-        client.onMessageArrived = (message) => {
-            console.log('Message:', message.destinationName, message.payloadString);
-            
-            const m = message.destinationName.match(/^esp\/status\/relay([1-4])$/);
-            if (m) {
-                const id = 'relay' + m[1];
-                syncDeviceState(id, message.payloadString);
-                clearPendingCommand(id);
-            } else if (message.destinationName === 'esp/status/online') {
-                setDeviceOnline(message.payloadString === 'online');
-            } else if (message.destinationName === 'esp/status/voice') {
-                showVoice(message.payloadString);
-            }
-        };
+// ----- remote IR -----
+const HINT='Tombol bergaris putus belum dipelajari.';
+function renderTabs(){const t=$('#tabs');t.innerHTML='';for(const id in R){const b=document.createElement('button');b.className='tab';b.textContent=R[id].tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',id===cur);b.onclick=()=>{cur=id;renderTabs();renderRemote()};t.append(b)}}
+function renderRemote(){const r=R[cur];$('#rn').textContent=r.tab;$('#rs').textContent=r.name;const g=$('#grid');g.innerHTML='';g.classList.toggle('learning',learn);
+ r.rows.flat().forEach(k=>{if(!k){g.append(document.createElement('span'));return}
+  const b=document.createElement('button');b.className='k '+(k[2]||'');b.textContent=k[1];b.setAttribute('aria-label',k[0]);
+  if(!learned[cur].has(k[0]))b.classList.add('new');b.onclick=()=>press(k[0],b);g.append(b)})}
+function press(key,btn){try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
+ if(!isConnected){showNotification('Belum terhubung ke broker');return}
+ if(learn){publishMessage('learn',cur+':'+key);btn.classList.add('hit');return}
+ if(!learned[cur].has(key)){showNotification('Tombol belum dipelajari. Aktifkan MODE BELAJAR.');return}
+ publishMessage(cur+'/send',key);const ir=$('#ir');ir.classList.add('fire');setTimeout(()=>ir.classList.remove('fire'),120)}
+$('#learn').onclick=e=>{learn=!learn;e.currentTarget.setAttribute('aria-pressed',learn);$('#hint').textContent=learn?'Ketuk tombol di layar, lalu tekan tombol yang sama di remote asli ke arah sensor (15 dtk).':HINT;renderRemote()};
+function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev].tab:dev;
+ if(st==='waiting')showNotification('Tekan tombol di remote asli sekarang…');
+ else if(st==='ok'){showNotification(`Tersimpan: ${name} / ${key} (${extra})`);$('#activity').textContent=`${name}: ${key} dipelajari`;learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}
+ else if(st==='sent')$('#activity').textContent=`${name}: ${key} terkirim`;
+ else if(st==='timeout')showNotification('Waktu habis, coba lagi');
+ else if(st==='unsupported')showNotification('Sinyal tidak didukung, tekan lagi dengan jelas');
+ else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32')}
 
-        // Connect to MQTT
-        function connectMQTT() {
-            const options = {
-                useSSL: true,
-                userName: mqttConfig.username,
-                password: mqttConfig.password,
-                onSuccess: () => {
-                    console.log('Connected to MQTT');
-                    isConnected = true;
-                    updateConnectionStatus('connected');
-                    refreshControls();
-                    showNotification('Berhasil terhubung ke MQTT broker!');
-                    
-                    client.subscribe('esp/status/relay1');
-                    client.subscribe('esp/status/relay2');
-                    client.subscribe('esp/status/relay3');
-                    client.subscribe('esp/status/relay4');
-                    client.subscribe('esp/status/online');
-                    client.subscribe('esp/status/voice');
-                    
-                    // Request current status from ESP8266
-                    setTimeout(() => {
-                        publishMessage('esp/get_status', 'request');
-                    }, 500);
-                },
-                onFailure: (error) => {
-                    console.error('Connection failed:', error.errorMessage);
-                    isConnected = false;
-                    updateConnectionStatus('disconnected');
-                    disableAllControls();
-                    showNotification('Gagal terhubung! Retry dalam 5 detik...');
-                    setTimeout(connectMQTT, 5000);
-                }
-            };
-
-            client.connect(options);
-        }
-
-        // Publish message
-        function publishMessage(topic, payload) {
-            if (client.isConnected()) {
-                const message = new Paho.MQTT.Message(payload);
-                message.destinationName = topic;
-                client.send(message);
-                console.log('Published:', topic, payload);
-            }
-        }
-
-        // Sync device state from MQTT
-        function syncDeviceState(deviceId, state) {
-            const card = document.querySelector(`.device-card[data-device="${deviceId}"]`);
-            if (!card) return;
-
-            const checkbox = card.querySelector('input[type="checkbox"]');
-            const status = card.querySelector('.device-status');
-            
-            const isOn = (state === 'ON');
-            checkbox.checked = isOn;
-            status.textContent = state;
-            
-            if (isOn) {
-                card.classList.add('active');
-            } else {
-                card.classList.remove('active');
-            }
-            
-            // Remove loading state
-            card.classList.remove('loading');
-        }
-
-        // Status alat (ESP32): true = online, false = offline, null = belum diketahui
-        let deviceOnline = null;
-
-        function updateDeviceChip() {
-            const chip = document.getElementById('device-chip');
-            const val = document.getElementById('device-state');
-            chip.classList.remove('online', 'offline');
-            if (deviceOnline === true) {
-                chip.classList.add('online');
-                val.textContent = 'ONLINE';
-            } else if (deviceOnline === false) {
-                chip.classList.add('offline');
-                val.textContent = 'OFFLINE';
-            } else {
-                val.textContent = 'MENUNGGU...';
-            }
-        }
-
-        // Kontrol aktif hanya jika MQTT terhubung dan alat tidak terdeteksi offline
-        function refreshControls() {
-            if (isConnected && deviceOnline !== false) {
-                enableAllControls();
-            } else {
-                disableAllControls();
-            }
-        }
-
-        function setDeviceOnline(online) {
-            const changed = (deviceOnline !== online);
-            deviceOnline = online;
-            updateDeviceChip();
-            if (!online) {
-                Object.keys(pendingCommands).forEach(clearPendingCommand);
-            }
-            refreshControls();
-            if (changed) {
-                showNotification(online ? 'Alat ESP32 online.' : 'Alat ESP32 OFFLINE. Kontrol dinonaktifkan.');
-            }
-        }
-
-        function showVoice(text) {
-            document.getElementById('voice-text').textContent = text || '-';
-        }
-
-        // Enable all controls
-        function enableAllControls() {
-            const deviceCards = document.querySelectorAll('.device-card');
-            deviceCards.forEach(card => {
-                card.classList.remove('disabled');
-                const checkbox = card.querySelector('input[type="checkbox"]');
-                checkbox.disabled = false;
-            });
-        }
-
-        // Disable all controls
-        function disableAllControls() {
-            const deviceCards = document.querySelectorAll('.device-card');
-            deviceCards.forEach(card => {
-                card.classList.add('disabled');
-                card.classList.remove('loading');
-                const checkbox = card.querySelector('input[type="checkbox"]');
-                checkbox.disabled = true;
-            });
-        }
-
-        // Set loading state for device
-        function setDeviceLoading(deviceId, isLoading) {
-            const card = document.querySelector(`.device-card[data-device="${deviceId}"]`);
-            if (!card) return;
-            
-            if (isLoading) {
-                card.classList.add('loading');
-            } else {
-                card.classList.remove('loading');
-            }
-        }
-
-        // Clear pending command
-        function clearPendingCommand(deviceId) {
-            if (pendingCommands[deviceId]) {
-                clearTimeout(pendingCommands[deviceId]);
-                delete pendingCommands[deviceId];
-                setDeviceLoading(deviceId, false);
-            }
-        }
-
-        // Handle command timeout
-        function handleCommandTimeout(deviceId, expectedState) {
-            showNotification(`Timeout! Tidak ada respons dari Relay ${deviceId.replace('relay', '')}. Periksa koneksi ESP8266.`);
-            
-            // Revert UI to previous state
-            const card = document.querySelector(`.device-card[data-device="${deviceId}"]`);
-            if (!card) return;
-            
-            const checkbox = card.querySelector('input[type="checkbox"]');
-            checkbox.checked = !checkbox.checked; // Revert
-            
-            setDeviceLoading(deviceId, false);
-            delete pendingCommands[deviceId];
-        }
-
-        // Setup device controls
-        function setupDeviceControls() {
-            const deviceCards = document.querySelectorAll('.device-card');
-            
-            deviceCards.forEach(card => {
-                const toggle = card.querySelector('input[type="checkbox"]');
-                const status = card.querySelector('.device-status');
-                const deviceId = card.getAttribute('data-device');
-
-                toggle.addEventListener('change', function() {
-                    // Check if connected to MQTT
-                    if (!isConnected) {
-                        showNotification('Tidak terhubung ke MQTT! Tidak dapat mengontrol relay.');
-                        this.checked = !this.checked; // Revert
-                        return;
-                    }
-
-                    const newState = this.checked ? 'ON' : 'OFF';
-                    const relayNum = deviceId.replace('relay', '');
-                    
-                    // Set loading state
-                    setDeviceLoading(deviceId, true);
-                    
-                    // Publish to MQTT
-                    publishMessage(`esp/relay${relayNum}`, newState);
-                    
-                    // Set timeout for response
-                    pendingCommands[deviceId] = setTimeout(() => {
-                        handleCommandTimeout(deviceId, newState);
-                    }, COMMAND_TIMEOUT);
-                    
-                    console.log(`Waiting for confirmation from Relay ${relayNum}...`);
-                });
-                
-                // Click card to toggle
-                card.addEventListener('click', function(e) {
-                    if (!isConnected) return; // Prevent click if not connected
-                    
-                    if (e.target !== toggle && !e.target.classList.contains('slider')) {
-                        toggle.checked = !toggle.checked;
-                        toggle.dispatchEvent(new Event('change'));
-                    }
-                });
-            });
-        }
-
-        // Initialize
-        function init() {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            setupDeviceControls();
-            disableAllControls(); // Start with controls disabled
-            connectMQTT();
-        }
-
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
+function init(){updateDateTime();setInterval(updateDateTime,1000);renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
+window.addEventListener('DOMContentLoaded',init);
+</script>
 </body>
 </html>
