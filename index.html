@@ -129,7 +129,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;overscroll-beha
   <header>
     <div class="logo">⚡ ATTAMATION IOT</div>
     <div class="hr">
-      <div class="who" id="whoami">Hanya baca</div><button class="pill" id="auth-btn">LOGIN</button>
+      <div class="who" id="whoami">Monitoring Only</div><button class="pill" id="auth-btn">LOGIN</button>
       <div class="time-date"><div class="time" id="current-time">00:00:00</div><div class="date" id="current-date">Loading...</div></div>
       <button class="theme-btn" id="theme-btn" aria-label="Ganti tema terang/gelap"><i class="fas fa-sun"></i></button>
     </div>
@@ -144,7 +144,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;overscroll-beha
 
   <div class="connection-status connecting" id="connection-status"><i class="fas fa-circle-notch fa-spin"></i> MENGHUBUNGKAN KE MQTT...</div>
 
-  <div class="ro" id="ro"><i class="fas fa-lock"></i> Mode hanya-baca. Login untuk mengontrol lampu, kipas, dan remote.</div>
+  <div class="ro" id="ro"><i class="fas fa-lock"></i> Mode Monitoring Only. Login untuk mengontrol lampu, kipas, dan remote.</div>
 
   <div class="device-info">
     <div class="info-chip" id="device-chip"><span class="label">STATUS ALAT (ESP32)</span><span class="value" id="device-state">MENUNGGU...</span></div>
@@ -280,7 +280,7 @@ function connectMQTT(){
 }
 function rawPub(sub,pl){const m=new Paho.MQTT.Message(pl);m.destinationName=P+sub;client.send(m)}
 function publishMessage(topic,payload){
- if(!sess){showNotification('Mode hanya-baca. Login untuk mengontrol.');return false}
+ if(!sess){showNotification('Mode Monitoring Only. Login untuk mengontrol.');return false}
  if(!client.isConnected())return false;
  const s=sess;
  q=q.then(async()=>{const n=++s.ctr;try{sessionStorage.setItem('ctr',n)}catch(e){}const base=cid+'|'+n+'|'+topic+'|'+payload;rawPub('cmd',base+'|'+hex(await hmacKey(s.key,base)))}).catch(()=>{});
@@ -333,7 +333,7 @@ function setupAc(){acGroup('#ac-mode',AM,'mode');acGroup('#ac-fan',AF,'fan');
  $('#ac-detect').onclick=()=>{if(!sess||sess.role<2){showNotification('Deteksi AC khusus admin. Login dulu.');return}if(isConnected)publishMessage('learn','ac:detect');else showNotification('Belum terhubung ke broker')};renderAc()}
 function press(key,btn){try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
  if(!isConnected){showNotification('Belum terhubung ke broker');return}
- if(!sess){showNotification('Mode hanya-baca. Login untuk mengontrol.');return}
+ if(!sess){showNotification('Mode Monitoring Only. Login untuk mengontrol.');return}
  if(learn){publishMessage('learn',cur+':'+key);btn.classList.add('hit');return}
  if(!learned[cur].has(key)){showNotification('Tombol belum dipelajari. Aktifkan MODE RECEIVE.');return}
  publishMessage(cur+'/send',key);const ir=$('#ir');ir.classList.add('fire');setTimeout(()=>ir.classList.remove('fire'),120)}
@@ -369,7 +369,7 @@ async function doLogin(u,p){
 async function restoreSession(){try{const o=JSON.parse(sessionStorage.getItem('sess')||'null');if(!o||!(window.crypto&&crypto.subtle))return;const kb=new Uint8Array(o.k.match(/../g).map(x=>parseInt(x,16)));sess={key:await crypto.subtle.importKey('raw',kb,{name:'HMAC',hash:'SHA-256'},false,['sign']),ctr:+(sessionStorage.getItem('ctr')||o.ctr),role:o.role,user:o.user};updateAuthUI()}catch(e){}}
 function clearSess(){try{sessionStorage.removeItem('sess');sessionStorage.removeItem('ctr')}catch(e){}}
 function authRes(m){if(m==='deny'){const was=!!sess;sess=null;clearSess();updateAuthUI();if(was){showNotification('Sesi berakhir. Login lagi.');try{if(!$('#logdlg').open)$('#logdlg').showModal()}catch(e){}}}else if(m==='forbidden')showNotification('Akses ditolak untuk akun ini.')}
-function updateAuthUI(){$('#auth-btn').textContent=sess?'KELUAR':'LOGIN';$('#whoami').textContent=sess?sess.user+' · '+(sess.role>=2?'admin':'pengguna'):'Hanya baca';$('#ro').hidden=!!sess;
+function updateAuthUI(){$('#auth-btn').textContent=sess?'KELUAR':'LOGIN';$('#whoami').textContent=sess?sess.user+' · '+(sess.role>=2?'admin':'pengguna'):'Monitoring Only';$('#ro').hidden=!!sess;
  $('#learn').disabled=!(sess&&sess.role>=2);if(!(sess&&sess.role>=2)&&learn){learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}refreshControls()}
 $('#auth-btn').onclick=()=>{if(sess){publishMessage('logout','');q=q.then(()=>{sess=null;clearSess();updateAuthUI();showNotification('Anda telah keluar.')})}else{$('#log-err').textContent='';$('#logdlg').showModal()}};
 $('#log-cancel').onclick=()=>$('#logdlg').close();
