@@ -384,7 +384,7 @@ let hist={},trend={},hView=new Date(),tView=new Date(),lastTrend=0,tabNow='dash'
 try{hist=JSON.parse(localStorage.getItem('iotHist_v1')||'{}');trend=JSON.parse(localStorage.getItem('iotTrend_v1')||'{}')}catch(e){hist={};trend={}}
 function trimOld(o){const cut=dkey(new Date(Date.now()-MAX_DAYS*864e5));Object.keys(o).forEach(k=>{if(k<cut)delete o[k]})}
 function persist(){trimOld(hist);trimOld(trend);for(let i=0;i<8;i++){try{localStorage.setItem('iotHist_v1',JSON.stringify(hist));localStorage.setItem('iotTrend_v1',JSON.stringify(trend));return}catch(e){const a=Object.keys(hist).sort()[0],b=Object.keys(trend).sort()[0];if(a)delete hist[a];if(b)delete trend[b];if(!a&&!b)return}}}
-const KIND={login:['fa-right-to-bracket','Login'],relay:['fa-lightbulb','Lampu & Kipas'],remote:['fa-tower-broadcast','Remote IR'],ac:['fa-snowflake','AC'],learn:['fa-gear','Pengaturan remote'],system:['fa-microchip','Sistem']};
+const KIND={login:['fa-right-to-bracket','Login'],relay:['fa-lightbulb','Kontrol Perangkat'],remote:['fa-tower-broadcast','Remote IR'],ac:['fa-snowflake','AC'],learn:['fa-gear','Pengaturan remote'],system:['fa-microchip','Sistem']};
 function who(e){return e.u&&e.u!=='-'?e.u:e.s==='sentuh'?'Sentuh (TTP223)':'Sistem'}
 function addEvent(k,m,u,s){const now=new Date(),key=dkey(now);(hist[key]=hist[key]||[]).push({t:now.getTime(),k:KIND[k]?k:'system',m:String(m).slice(0,80),u:u||'-',s:s||'web'});if(hist[key].length>500)hist[key].shift();persist();
  $('#activity').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+' · '+m+' ('+who({u,s})+')';if(tabNow==='history'&&dkey(hView)===key)renderHist()}
