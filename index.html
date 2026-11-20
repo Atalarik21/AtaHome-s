@@ -2,9 +2,10 @@
 <html lang="id" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Atamation - Smart Remote</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
 :root{--primary:#00f7ff;--secondary:#ff00aa;--accent:#7b2dff;--bg:#0a0a1a;--text:#e0e0ff;--card:rgba(20,20,40,.6);--p1:rgba(10,10,26,.8);--p2:rgba(5,5,16,.9);--key:rgba(30,30,60,.8);--toast:rgba(10,10,26,.95);--glow:0 0 20px rgba(0,247,255,.8);--shadow:0 10px 30px rgba(0,0,0,.3);--g1:rgba(123,45,255,.1);--g2:rgba(0,247,255,.1);color-scheme:dark}
@@ -106,6 +107,21 @@ dialog input{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px soli
 dialog select{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text)}
 .pw{position:relative;display:block}.pw input{width:100%;padding-right:2.8rem}
 .eye{position:absolute;right:.3rem;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--text);opacity:.7;cursor:pointer;padding:.5rem .7rem;font-size:1rem}.eye:hover{opacity:1}
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;overscroll-behavior:none}input,select{font-size:16px!important}
+.navtabs{display:flex;gap:.5rem;margin-bottom:1.5rem}.navtab{flex:1;font-family:'Orbitron',sans-serif;font-size:.8rem;padding:.75rem .5rem;border-radius:12px;border:1px solid color-mix(in srgb,var(--primary) 25%,transparent);background:var(--card);color:var(--text);cursor:pointer;transition:.3s}
+.navtab.active{border-color:var(--primary);color:var(--primary);box-shadow:var(--glow)}.navtab i{margin-right:.4rem}
+.tab-content{display:none}.tab-content.active{display:block}
+.dnav{display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.dbtn{width:40px;height:40px;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text);cursor:pointer}
+.dinput{font:inherit;padding:.55rem .8rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);background:var(--card);color:var(--text)}.dinput.wide{width:100%;margin-bottom:.8rem}
+.hcount,.hfoot span{font-size:.8rem;opacity:.7}.hcount{margin-bottom:.6rem}
+.hlist{max-height:480px;overflow-y:auto}.nodata{text-align:center;opacity:.6;padding:2rem 0}
+.hitem{display:flex;align-items:center;gap:.8rem;padding:.7rem .8rem;border-radius:10px;background:var(--card);margin-bottom:.5rem}
+.hic{color:var(--primary);width:1.4rem;text-align:center}.hmain{flex:1;min-width:0}.hev{font-weight:500;overflow-wrap:anywhere}.hdet{font-size:.72rem;opacity:.65;margin-top:2px}.htime{font-family:'Orbitron',sans-serif;font-size:.72rem;opacity:.7}
+.hfoot{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1rem;flex-wrap:wrap}
+.chartbox{background:var(--card);border-radius:12px;padding:1rem;margin-bottom:1rem}.ctitle{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--primary);margin-bottom:.6rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.4rem}
+.cstat{font-family:'Roboto',sans-serif;font-size:.72rem;color:var(--text);opacity:.7}.cwrap{height:210px;position:relative}
+.info-chip.click{cursor:pointer}
 </style>
 </head>
 <body>
@@ -118,6 +134,8 @@ dialog select{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px sol
       <button class="theme-btn" id="theme-btn" aria-label="Ganti tema terang/gelap"><i class="fas fa-sun"></i></button>
     </div>
   </header>
+  <nav class="navtabs"><button class="navtab active" data-tab="dash"><i class="fas fa-gauge-high"></i>Dashboard</button><button class="navtab" data-tab="history"><i class="fas fa-clock-rotate-left"></i>History</button><button class="navtab" data-tab="trends"><i class="fas fa-chart-line"></i>Trends</button></nav>
+  <div class="tab-content active" id="tab-dash">
 
   <div class="device-card sensor-card sensor-top">
     <div class="sblock"><div class="device-icon"><i class="fas fa-temperature-half"></i></div><div><div class="device-name">Suhu</div><div class="sv"><span id="s-temp">--</span><small>°C</small></div></div></div>
@@ -155,6 +173,24 @@ dialog select{font:inherit;padding:.6rem .8rem;border-radius:10px;border:1px sol
     <div class="remote" id="remote"><div class="ir" id="ir"></div><div class="rname"><span id="rn"></span><small id="rs"></small></div><div class="rows" id="grid"></div></div>
     <div class="learnbar"><span id="hint">Tombol bergaris putus belum dipelajari.</span><button class="pill" id="learn" aria-pressed="false">MODE RECEIVE</button></div>
   </div>
+
+  </div>
+
+  <div class="tab-content" id="tab-history"><div class="panel">
+    <div class="panel-title"><i class="fas fa-clock-rotate-left"></i> HISTORY AKTIVITAS</div>
+    <div class="dnav"><button class="dbtn" id="hPrev" aria-label="Hari sebelumnya">◀</button><input type="date" id="hDate" class="dinput"><button class="dbtn" id="hNext" aria-label="Hari berikutnya">▶</button><button class="pill" id="hToday">HARI INI</button></div>
+    <select id="hFilter" class="dinput wide"><option value="all">Semua aktivitas</option><option value="login">Login</option><option value="relay">Lampu &amp; Kipas</option><option value="remote">Remote IR</option><option value="ac">AC</option><option value="learn">Pengaturan remote</option><option value="system">Sistem</option></select>
+    <div class="hcount" id="hCount">0 aktivitas</div><div class="hlist" id="hList"></div>
+    <div class="hfoot"><span id="hStore"></span><button class="pill" id="hClear">HAPUS SEMUA</button></div>
+  </div></div>
+
+  <div class="tab-content" id="tab-trends"><div class="panel">
+    <div class="panel-title"><i class="fas fa-chart-line"></i> TREND SUHU &amp; KELEMBAPAN</div>
+    <div class="dnav"><button class="dbtn" id="tPrev" aria-label="Hari sebelumnya">◀</button><input type="date" id="tDate" class="dinput"><button class="dbtn" id="tNext" aria-label="Hari berikutnya">▶</button><button class="pill" id="tToday">HARI INI</button></div>
+    <div class="chartbox"><div class="ctitle"><span><i class="fas fa-temperature-half"></i> Suhu (°C)</span><span class="cstat" id="statT"></span></div><div class="cwrap"><canvas id="tempChart"></canvas></div></div>
+    <div class="chartbox"><div class="ctitle"><span><i class="fas fa-droplet"></i> Kelembapan (%)</span><span class="cstat" id="statH"></span></div><div class="cwrap"><canvas id="humChart"></canvas></div></div>
+    <div class="hfoot"><span id="tStore"></span><button class="pill" id="tClear">HAPUS SEMUA</button></div>
+  </div></div>
 
   <footer>Designed by <span>ATTAMATION</span></footer>
 </div>
@@ -202,13 +238,13 @@ const R={
 };
 const $=s=>document.querySelector(s);
 const learned={proj:new Set(),sound:new Set(),night:new Set(),ac:new Set()};
-const cid=Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
+const cid=(()=>{let c=null;try{c=sessionStorage.getItem('cid')}catch(e){}if(!c){c=Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');try{sessionStorage.setItem('cid',c)}catch(e){}}return c})();
 let sess=null,q=Promise.resolve();const waiters={};
 let cur='proj',learn=false,isConnected=false,deviceOnline=null,pending={};
 const TIMEOUT=5000;
 
 // ----- tema -----
-function setTheme(t){document.documentElement.dataset.theme=t;$('#theme-btn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';try{localStorage.setItem('theme',t)}catch(e){}}
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme-btn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';try{localStorage.setItem('theme',t)}catch(e){}if(typeof charts!=='undefined'&&charts&&charts.tempChart){buildCharts();renderTrend()}}
 let saved=null;try{saved=localStorage.getItem('theme')}catch(e){}
 setTheme(saved||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
 $('#theme-btn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
@@ -230,15 +266,16 @@ client.onMessageArrived=msg=>{
  if(t==='lamp/state'||t==='fan/state'){const id=t.split('/')[0];syncDeviceState(id,m);clearPending(id)}
  else if(t==='status')setDeviceOnline(m==='online');
  else if(t.endsWith('/learned')&&learned[t.split('/')[0]]){try{learned[t.split('/')[0]]=new Set(JSON.parse(m));renderRemote()}catch(e){}}
- else if(t==='sensor'){try{const o=JSON.parse(m);$('#s-temp').textContent=o.temp.toFixed(1);$('#s-hum').textContent=Math.round(o.hum)}catch(e){}}
+ else if(t==='sensor'){try{const o=JSON.parse(m);$('#s-temp').textContent=o.temp.toFixed(1);$('#s-hum').textContent=Math.round(o.hum);if(o.temp>-40&&o.temp<85&&o.hum>=0&&o.hum<=100)addTrend(o.temp,o.hum)}catch(e){}}
  else if(t==='ac/state'){try{acs=JSON.parse(m);renderAc()}catch(e){}}
+ else if(t==='event'){try{const o=JSON.parse(m);addEvent(o.k,o.m,o.u,o.s)}catch(e){}}
  else if(t==='learnstate')onLearnState(m);
 };
 function connectMQTT(){
  updateConnectionStatus('connecting');
- client.connect({useSSL:true,userName:mqttConfig.username,password:mqttConfig.password,
+ client.connect({useSSL:true,keepAliveInterval:30,timeout:10,userName:mqttConfig.username,password:mqttConfig.password,
   onSuccess:()=>{isConnected=true;updateConnectionStatus('connected');refreshControls();showNotification('Berhasil terhubung ke MQTT broker!');
-   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','auth/users','learnstate'].forEach(x=>client.subscribe(P+x));client.subscribe(P+'auth/chal/'+cid);client.subscribe(P+'auth/res/'+cid)},
+   ['lamp/state','fan/state','status','proj/learned','sound/learned','night/learned','ac/learned','ac/state','sensor','auth/users','event','learnstate'].forEach(x=>client.subscribe(P+x));client.subscribe(P+'auth/chal/'+cid);client.subscribe(P+'auth/res/'+cid)},
   onFailure:e=>{isConnected=false;updateConnectionStatus('disconnected');refreshControls();showNotification('Gagal terhubung! Retry dalam 5 detik...');setTimeout(connectMQTT,5000)}});
 }
 function rawPub(sub,pl){const m=new Paho.MQTT.Message(pl);m.destinationName=P+sub;client.send(m)}
@@ -246,7 +283,7 @@ function publishMessage(topic,payload){
  if(!sess){showNotification('Mode hanya-baca. Login untuk mengontrol.');return false}
  if(!client.isConnected())return false;
  const s=sess;
- q=q.then(async()=>{const n=++s.ctr,base=cid+'|'+n+'|'+topic+'|'+payload;rawPub('cmd',base+'|'+hex(await hmacKey(s.key,base)))}).catch(()=>{});
+ q=q.then(async()=>{const n=++s.ctr;try{sessionStorage.setItem('ctr',n)}catch(e){}const base=cid+'|'+n+'|'+topic+'|'+payload;rawPub('cmd',base+'|'+hex(await hmacKey(s.key,base)))}).catch(()=>{});
  return true}
 
 // ----- status alat & kontrol -----
@@ -254,7 +291,7 @@ function updateDeviceChip(){const c=$('#device-chip'),v=$('#device-state');c.cla
  if(deviceOnline===true){c.classList.add('online');v.textContent='ONLINE'}else if(deviceOnline===false){c.classList.add('offline');v.textContent='OFFLINE'}else v.textContent='MENUNGGU...'}
 function refreshControls(){const ok=isConnected&&deviceOnline!==false&&!!sess;
  document.querySelectorAll('.device-card[data-device]').forEach(c=>{c.classList.toggle('disabled',!ok);if(!ok)c.classList.remove('loading');c.querySelector('input').disabled=!ok})}
-function setDeviceOnline(o){const ch=deviceOnline!==o;deviceOnline=o;updateDeviceChip();if(!o)Object.keys(pending).forEach(clearPending);refreshControls();if(ch)showNotification(o?'Alat ESP32 online.':'Alat ESP32 OFFLINE. Kontrol dinonaktifkan.')}
+function setDeviceOnline(o){const was=deviceOnline,ch=was!==o;deviceOnline=o;updateDeviceChip();if(!o)Object.keys(pending).forEach(clearPending);refreshControls();if(ch){showNotification(o?'Alat ESP32 online.':'Alat ESP32 OFFLINE. Kontrol dinonaktifkan.');if(was!==null)addEvent('system',o?'ESP32 online':'ESP32 offline','-','web')}}
 function syncDeviceState(id,state){const c=document.querySelector(`.device-card[data-device="${id}"]`);if(!c)return;const on=state==='ON';
  c.querySelector('input').checked=on;c.querySelector('.device-status').textContent=state;c.classList.toggle('active',on);c.classList.remove('loading')}
 function clearPending(id){if(pending[id]){clearTimeout(pending[id]);delete pending[id]}const c=document.querySelector(`.device-card[data-device="${id}"]`);if(c)c.classList.remove('loading')}
@@ -303,10 +340,10 @@ function press(key,btn){try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
 $('#learn').onclick=e=>{if(!sess||sess.role<2){showNotification('Mode Receive khusus admin. Login dulu.');return}learn=!learn;e.currentTarget.setAttribute('aria-pressed',learn);$('#hint').textContent=learn?'Ketuk tombol di layar, lalu tekan tombol yang sama di remote asli ke arah sensor (15 dtk).':HINT;renderRemote()};
 function onLearnState(m){const [st,dev,key,extra]=m.split(':'),name=R[dev]?R[dev].tab:dev;
  if(st==='waiting')showNotification('Tekan tombol di remote asli sekarang…');
- else if(st==='ok'){showNotification(`Tersimpan: ${name} / ${key} (${extra})`);$('#activity').textContent=`${name}: ${key} dipelajari`;learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}
- else if(st==='sent')$('#activity').textContent=`${name}: ${key} terkirim`;
+ else if(st==='ok'){showNotification(`Tersimpan: ${name} / ${key} (${extra})`);learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}
  else if(st==='timeout')showNotification('Waktu habis, coba lagi');
  else if(st==='unsupported')showNotification('Sinyal tidak didukung, tekan lagi dengan jelas');
+ else if(st==='savefail')showNotification('GAGAL menyimpan tombol ke memori ESP32 (memori penuh?). Coba lagi.');
  else if(st==='nocode')showNotification('Kode belum tersimpan di ESP32');
  else if(st==='acnone')showNotification('Merek AC belum terdeteksi. Tekan DETEKSI REMOTE AC dulu.')}
 
@@ -328,18 +365,61 @@ async function doLogin(u,p){
  const r=waitFor('auth/res/'+cid,8000);rawPub('auth/proof',cid+':'+nc+':'+hex(await hmacRaw(H,'P|'+cid+'|'+ns+'|'+nc)));
  const res=await r;if(!res.startsWith('ok:'))throw new Error(res.replace('fail:',''));
  const [,role,user]=res.split(':'),K=await hmacRaw(H,'K|'+cid+'|'+ns+'|'+nc);
- sess={key:await crypto.subtle.importKey('raw',K,{name:'HMAC',hash:'SHA-256'},false,['sign']),ctr:0,role:+role,user}}
-function authRes(m){if(m==='deny'){sess=null;updateAuthUI();showNotification('Sesi berakhir. Login lagi.')}else if(m==='forbidden')showNotification('Akses ditolak untuk akun ini.')}
+ sess={key:await crypto.subtle.importKey('raw',K,{name:'HMAC',hash:'SHA-256'},false,['sign']),ctr:0,role:+role,user};try{sessionStorage.setItem('sess',JSON.stringify({k:hex(K),ctr:0,role:+role,user}))}catch(e){}}
+async function restoreSession(){try{const o=JSON.parse(sessionStorage.getItem('sess')||'null');if(!o||!(window.crypto&&crypto.subtle))return;const kb=new Uint8Array(o.k.match(/../g).map(x=>parseInt(x,16)));sess={key:await crypto.subtle.importKey('raw',kb,{name:'HMAC',hash:'SHA-256'},false,['sign']),ctr:+(sessionStorage.getItem('ctr')||o.ctr),role:o.role,user:o.user};updateAuthUI()}catch(e){}}
+function clearSess(){try{sessionStorage.removeItem('sess');sessionStorage.removeItem('ctr')}catch(e){}}
+function authRes(m){if(m==='deny'){const was=!!sess;sess=null;clearSess();updateAuthUI();if(was){showNotification('Sesi berakhir. Login lagi.');try{if(!$('#logdlg').open)$('#logdlg').showModal()}catch(e){}}}else if(m==='forbidden')showNotification('Akses ditolak untuk akun ini.')}
 function updateAuthUI(){$('#auth-btn').textContent=sess?'KELUAR':'LOGIN';$('#whoami').textContent=sess?sess.user+' · '+(sess.role>=2?'admin':'pengguna'):'Hanya baca';$('#ro').hidden=!!sess;
  $('#learn').disabled=!(sess&&sess.role>=2);if(!(sess&&sess.role>=2)&&learn){learn=false;$('#learn').setAttribute('aria-pressed',false);$('#hint').textContent=HINT;renderRemote()}refreshControls()}
-$('#auth-btn').onclick=()=>{if(sess){publishMessage('logout','');q=q.then(()=>{sess=null;updateAuthUI();showNotification('Anda telah keluar.')})}else{$('#log-err').textContent='';$('#logdlg').showModal()}};
+$('#auth-btn').onclick=()=>{if(sess){publishMessage('logout','');q=q.then(()=>{sess=null;clearSess();updateAuthUI();showNotification('Anda telah keluar.')})}else{$('#log-err').textContent='';$('#logdlg').showModal()}};
 $('#log-cancel').onclick=()=>$('#logdlg').close();
 $('#logform').onsubmit=async e=>{e.preventDefault();const b=$('#log-go');b.disabled=true;$('#log-err').textContent='';
  try{if(!isConnected)throw new Error('Belum terhubung ke broker');await doLogin($('#log-user').value.trim(),$('#log-pass').value);try{localStorage.setItem('lastUser',sess.user)}catch(e){}$('#log-pass').value='';$('#logdlg').close();updateAuthUI();showNotification('Login berhasil: '+sess.user)}
  catch(err){const m=err.message;$('#log-err').textContent=m==='timeout'?'ESP32 tidak merespons (offline?)':m==='salah'?'Username atau password salah':m==='terkunci'?'Terlalu banyak percobaan. Coba lagi 1 menit.':m}
  b.disabled=false};
 
-function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();updateAuthUI();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
+// ----- History & Trend (disimpan di browser) -----
+const MAX_DAYS=30,TREND_MS=60000,pad=n=>String(n).padStart(2,'0'),dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+let hist={},trend={},hView=new Date(),tView=new Date(),lastTrend=0,tabNow='dash';var charts={};
+try{hist=JSON.parse(localStorage.getItem('iotHist_v1')||'{}');trend=JSON.parse(localStorage.getItem('iotTrend_v1')||'{}')}catch(e){hist={};trend={}}
+function trimOld(o){const cut=dkey(new Date(Date.now()-MAX_DAYS*864e5));Object.keys(o).forEach(k=>{if(k<cut)delete o[k]})}
+function persist(){trimOld(hist);trimOld(trend);for(let i=0;i<8;i++){try{localStorage.setItem('iotHist_v1',JSON.stringify(hist));localStorage.setItem('iotTrend_v1',JSON.stringify(trend));return}catch(e){const a=Object.keys(hist).sort()[0],b=Object.keys(trend).sort()[0];if(a)delete hist[a];if(b)delete trend[b];if(!a&&!b)return}}}
+const KIND={login:['fa-right-to-bracket','Login'],relay:['fa-lightbulb','Lampu & Kipas'],remote:['fa-tower-broadcast','Remote IR'],ac:['fa-snowflake','AC'],learn:['fa-gear','Pengaturan remote'],system:['fa-microchip','Sistem']};
+function who(e){return e.u&&e.u!=='-'?e.u:e.s==='sentuh'?'Sentuh (TTP223)':'Sistem'}
+function addEvent(k,m,u,s){const now=new Date(),key=dkey(now);(hist[key]=hist[key]||[]).push({t:now.getTime(),k:KIND[k]?k:'system',m:String(m).slice(0,80),u:u||'-',s:s||'web'});if(hist[key].length>500)hist[key].shift();persist();
+ $('#activity').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+' · '+m+' ('+who({u,s})+')';if(tabNow==='history'&&dkey(hView)===key)renderHist()}
+function renderHist(){const key=dkey(hView),f=$('#hFilter').value;$('#hDate').value=key;
+ const list=(hist[key]||[]).slice().reverse().filter(e=>f==='all'||e.k===f),box=$('#hList');box.innerHTML='';
+ $('#hCount').textContent=list.length+' aktivitas'+(f!=='all'?' (difilter)':'');
+ if(!list.length){const d=document.createElement('div');d.className='nodata';d.textContent='Belum ada aktivitas';box.append(d)}
+ list.forEach(e=>{const d=new Date(e.t),kd=KIND[e.k]||KIND.system,r=document.createElement('div');r.className='hitem';
+  r.innerHTML='<i class="fas '+kd[0]+' hic"></i><div class="hmain"><div class="hev"></div><div class="hdet"></div></div><div class="htime"></div>';
+  r.querySelector('.hev').textContent=e.m;r.querySelector('.hdet').textContent=kd[1]+' · '+who(e);r.querySelector('.htime').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());box.append(r)});
+ let n=0;Object.values(hist).forEach(a=>n+=a.length);$('#hStore').textContent='Tersimpan: '+n+' aktivitas ('+Object.keys(hist).length+' hari)'}
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function buildCharts(){if(typeof Chart==='undefined')return;Object.values(charts).forEach(c=>c.destroy());charts={};const grid=cssv('--text')+'22',tick=cssv('--text')+'aa';
+ [['tempChart','Suhu',cssv('--secondary')],['humChart','Kelembapan',cssv('--primary')]].forEach(([id,l,c])=>{charts[id]=new Chart($('#'+id),{type:'line',data:{labels:[],datasets:[{label:l,data:[],borderColor:c,backgroundColor:c+'22',fill:true,tension:.3,pointRadius:0,borderWidth:2}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tick,maxTicksLimit:7},grid:{color:grid}},y:{ticks:{color:tick},grid:{color:grid}}}}})})}
+function renderTrend(){const key=dkey(tView),d=trend[key]||{t:[],T:[],H:[]};$('#tDate').value=key;if(!charts.tempChart)buildCharts();
+ const lab=d.t.map(x=>{const q=new Date(x);return pad(q.getHours())+':'+pad(q.getMinutes())});
+ [['tempChart',d.T,'statT','°C'],['humChart',d.H,'statH','%']].forEach(([id,a,st,u])=>{const c=charts[id];if(c){c.data.labels=lab;c.data.datasets[0].data=a;c.update()}
+  $('#'+st).textContent=a.length?'min '+Math.min(...a).toFixed(1)+u+' · maks '+Math.max(...a).toFixed(1)+u+' · rata-rata '+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)+u:'Belum ada data'});
+ let n=0;Object.values(trend).forEach(x=>n+=x.t.length);$('#tStore').textContent='Tersimpan: '+n+' titik ('+Object.keys(trend).length+' hari)'}
+function addTrend(t,h){const now=Date.now();if(now-lastTrend<TREND_MS)return;lastTrend=now;const key=dkey(new Date(now)),d=trend[key]=trend[key]||{t:[],T:[],H:[]};d.t.push(now);d.T.push(t);d.H.push(h);persist();if(tabNow==='trends'&&dkey(tView)===key)renderTrend()}
+function showTab(n){tabNow=n;document.querySelectorAll('.navtab').forEach(b=>b.classList.toggle('active',b.dataset.tab===n));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+n));if(n==='history')renderHist();if(n==='trends')renderTrend()}
+document.querySelectorAll('.navtab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+const step=(v,d)=>{v.setDate(v.getDate()+d)},setD=(v,x)=>{if(x){const q=new Date(x+'T00:00:00');v.setTime(q.getTime())}};
+$('#hPrev').onclick=()=>{step(hView,-1);renderHist()};$('#hNext').onclick=()=>{step(hView,1);renderHist()};$('#hToday').onclick=()=>{hView=new Date();renderHist()};$('#hDate').onchange=e=>{setD(hView,e.target.value);renderHist()};$('#hFilter').onchange=renderHist;
+$('#tPrev').onclick=()=>{step(tView,-1);renderTrend()};$('#tNext').onclick=()=>{step(tView,1);renderTrend()};$('#tToday').onclick=()=>{tView=new Date();renderTrend()};$('#tDate').onchange=e=>{setD(tView,e.target.value);renderTrend()};
+$('#hClear').onclick=()=>{if(confirm('Hapus semua history aktivitas di browser ini?')){hist={};persist();renderHist()}};
+$('#tClear').onclick=()=>{if(confirm('Hapus semua data trend di browser ini?')){trend={};persist();renderTrend()}};
+$('#activity').closest('.info-chip').classList.add('click');$('#activity').closest('.info-chip').onclick=()=>showTab('history');
+['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault()));
+document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
+document.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['+','-','=','0'].includes(e.key))e.preventDefault()});
+
+function init(){updateDateTime();setInterval(updateDateTime,1000);setupAc();updateAuthUI();restoreSession();renderTabs();renderRemote();setupDeviceControls();refreshControls();connectMQTT()}
 window.addEventListener('DOMContentLoaded',init);
 </script>
 
